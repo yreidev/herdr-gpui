@@ -354,7 +354,7 @@ impl SettingsWindow {
                 "Temporary VM from railway.new, created with the SSH key below."
             )));
         if let Some(reason) = crate::cloud::unavailable() {
-            about = about.child(self.control_note(reason));
+            about = about.child(self.control_note(t!(reason)));
         }
         let mut key = self
             .control_card("SSH key")

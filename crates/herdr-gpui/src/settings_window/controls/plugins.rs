@@ -123,11 +123,11 @@ impl SettingsWindow {
             .control_card("Sidebar values")
             .child(self.control_note(t!(CONFIG_NOTE)));
         if !ready {
-            card = card.child(self.control_note(if !cfg!(unix) {
+            card = card.child(self.control_note(t!(if !cfg!(unix) {
                 "Herdr's settings are read-only on this platform."
             } else {
                 "Herdr's settings are unavailable. Reload to retry."
-            }));
+            })));
         }
         card = card.child(self.rows_mode(cx));
         // Both columns shrink, so a wide navigation never pushes them past

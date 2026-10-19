@@ -21,6 +21,8 @@ pub(crate) use launch::Running;
 pub(crate) use pending::Pending;
 #[cfg(all(test, feature = "cloud"))]
 use pending::PendingSetups;
+#[cfg(feature = "cloud")]
+use rust_i18n::t;
 
 /// The longest script a device runs. It travels in `tab.create`'s
 /// environment, so it stays well under the API's request bound.
@@ -83,14 +85,20 @@ pub(crate) fn summary(
         .custom(provider)
         .map_or(0, |script| script.trim().lines().count());
     let custom = match count {
-        1 => "1 line of your own".to_owned(),
-        count => format!("{count} lines of your own"),
+        1 => t!("1 line of your own"),
+        count => t!("%{count} lines of your own", count = count),
     };
+    let agents = agents.join(&t!(", "));
     match (agents.is_empty(), count) {
-        (true, 0) => "Nothing to run.".into(),
-        (true, _) => format!("Runs {custom}."),
-        (false, 0) => format!("Installs {}.", agents.join(", ")),
-        (false, _) => format!("Installs {}, then runs {custom}.", agents.join(", ")),
+        (true, 0) => t!("Nothing to run.").into_owned(),
+        (true, _) => t!("Runs %{custom}.", custom = custom).into_owned(),
+        (false, 0) => t!("Installs %{agents}.", agents = agents).into_owned(),
+        (false, _) => t!(
+            "Installs %{agents}, then runs %{custom}.",
+            agents = agents,
+            custom = custom
+        )
+        .into_owned(),
     }
 }
 

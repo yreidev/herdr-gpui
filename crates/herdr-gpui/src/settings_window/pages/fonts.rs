@@ -77,7 +77,7 @@ impl SettingsWindow {
         let id = field.selector();
         let size = self.control_face_size(face);
         let view = cx.entity().downgrade();
-        let row = ui::row(theme, format!("fonts-{}", face.name()), label)
+        let row = ui::row(theme, format!("fonts-{}", face.name()), t!(label))
             .control(self.family_button(face, cx))
             .control(
                 ui::number(

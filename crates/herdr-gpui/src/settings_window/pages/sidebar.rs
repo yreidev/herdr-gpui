@@ -358,7 +358,7 @@ impl SettingsWindow {
         let mode = self.config.layout.mode;
         let options: Vec<SharedString> = LayoutMode::ALL
             .iter()
-            .map(|mode| SharedString::from(mode.label()))
+            .map(|mode| SharedString::from(t!(mode.label())))
             .collect();
         let selected = LayoutMode::ALL
             .iter()
@@ -369,7 +369,7 @@ impl SettingsWindow {
         ui::dropdown(
             &self.theme,
             FIELD.selector(),
-            mode.label(),
+            t!(mode.label()),
             false,
             ready,
             self.dropdown.as_ref().filter(|open| open.field == FIELD),

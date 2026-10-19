@@ -1,5 +1,6 @@
 # common：简体中文译文。翻译标准和术语表见同目录的 README.md。
 
+", ": "、"
 "VS Code's server is Microsoft software. Starting it accepts the Visual Studio Code Server License Terms and the Microsoft Privacy Statement, so the app starts it only once you accept them.": "VS Code 服务器是 Microsoft 的软件。启动它即表示接受《Visual Studio Code Server 许可条款》和《Microsoft 隐私声明》，所以本应用要等你接受后才会启动它。"
 "Compact": "紧凑"
 "Layout": "布局"

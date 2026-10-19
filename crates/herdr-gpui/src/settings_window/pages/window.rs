@@ -52,7 +52,7 @@ impl SettingsWindow {
         let (row, _, title) = padding_ids(axis, side);
         let value = self.number_value(field, self.config.terminal_padding.axis(axis).side(side));
         let view = cx.entity().downgrade();
-        ui::row(&self.theme, row, title)
+        ui::row(&self.theme, row, t!(title))
             .when(axis == Axis::X && side == Side::Start, |row| {
                 row.description(t!(
                     "Beside the sidebar. A deprecated sidebar_gap stands in while unset."

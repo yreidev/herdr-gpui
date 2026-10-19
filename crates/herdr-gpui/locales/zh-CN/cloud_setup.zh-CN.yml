@@ -1,0 +1,8 @@
+# cloud_setup：简体中文译文。翻译标准和术语表见同目录的 README.md。
+
+"1 line of your own": "1 行自定义脚本"
+"%{count} lines of your own": "%{count} 行自定义脚本"
+"Nothing to run.": "没有要运行的内容。"
+"Runs %{custom}.": "运行%{custom}。"
+"Installs %{agents}.": "安装 %{agents}。"
+"Installs %{agents}, then runs %{custom}.": "安装 %{agents}，然后运行%{custom}。"

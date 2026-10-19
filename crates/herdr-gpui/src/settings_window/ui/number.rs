@@ -2,6 +2,7 @@
 use crate::config::{Theme, corners};
 use crate::search_input::SearchInput;
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::{cell::Cell, ops::RangeInclusive, rc::Rc};
 
 thread_local! {
@@ -225,10 +226,10 @@ pub(in crate::settings_window) fn number(
         div()
             .text_size(px(10.))
             .text_color(rgb(theme.muted))
-            .child(format!(
-                "{} to {}",
-                *range.start() as i32,
-                *range.end() as i32
+            .child(t!(
+                "%{min} to %{max}",
+                min = *range.start() as i32,
+                max = *range.end() as i32
             )),
     )
 }
