@@ -23,6 +23,8 @@ pub(crate) enum Preference {
     ShowDeviceIcons(bool),
     SmoothScroll(bool),
     FocusFollowsMouse(bool),
+    /// `language`: the language the app's own text is shown in.
+    Language(Language),
     NotificationEnabled(Option<bool>),
     NotificationDelay(Option<u64>),
     NotificationPosition(Option<ToastHerdrPosition>),
@@ -94,6 +96,9 @@ impl Config {
             let (table, key, value) = match edit {
                 Preference::AgentsPlacement(placement) => {
                     (None, "agents_placement", Some(placement.as_str().into()))
+                }
+                Preference::Language(language) => {
+                    (None, "language", Some(language.as_str().into()))
                 }
                 Preference::ConfirmCloseTab(value) => {
                     (None, "confirm_close_tab", Some(value.into()))

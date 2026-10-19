@@ -701,11 +701,22 @@ Accepted saves survive closing Settings. Family and size edits preserve configur
 fallbacks and unrelated settings in `config-gpui.local.toml`. General retains
 browser-skill installation/removal and configuration paths.
 
+The app's own text (menus and Settings so far) shows in English or Simplified
+Chinese. `language = "auto"`, the default, follows the system's preferred
+languages and falls back to English; `"en"` or `"zh-CN"` picks one. A change
+applies to every open window at once, and terminal output is never translated.
+Translations live in `locales/<locale>/`: an `<area>.<locale>.yml` for each
+part of the app, and `common.<locale>.yml` for text more than one part shows.
+Each key is the English text in the code, so a message without an entry shows
+its English. A key must match that text exactly and appear in one file only,
+and a translation keeps every `%{name}` placeholder its English has (tests check
+both).
+
 Settings groups its pages: Appearance (Theme, Sidebar, Fonts, Status bar),
 Behaviour (General, Tabs & panes, Code, Notifications), Connect (Integrations,
 Plugins, Cloud devices) and Advanced (Configuration), with a search box above
 them that finds any row. Every row shows whether it is shared with Herdr or
-local to this app. General has **Show listening ports**, **Checkpoint agent
+local to this app. General has **Language**, **Show listening ports**, **Checkpoint agent
 turns**, **Smooth scrolling**, the clipboard notification overrides, **Remove
 worktrees of merged PRs**, the browser skill and **Install beta releases**.
 Tabs & panes has the tab bar, **Confirm before closing** a tab, pane or

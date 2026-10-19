@@ -2,6 +2,7 @@
 //! they take the theme and return elements; state and saves stay on the view.
 use crate::config::{Theme, corners};
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::rc::Rc;
 
 mod number;
@@ -41,6 +42,9 @@ pub(in crate::settings_window) fn tag(theme: &Theme, source: Source) -> Div {
         .child(label)
 }
 
+/// A section heading. `title` is the English the page passes, as with
+/// [`segmented`]'s labels: being `'static`, it is the app's own text, never a
+/// value the user typed, so the heading translates it.
 pub(in crate::settings_window) fn section(
     theme: &Theme,
     title: &'static str,
@@ -57,7 +61,7 @@ pub(in crate::settings_window) fn section(
         .text_size(px(11.))
         .font_weight(FontWeight::SEMIBOLD)
         .text_color(rgb(theme.subtext()))
-        .child(title.to_uppercase())
+        .child(t!(title).to_uppercase())
         .children(tag_source.map(|source| tag(theme, source)))
 }
 
@@ -252,6 +256,8 @@ pub(in crate::settings_window) fn button(
         .child(label)
 }
 
+/// A strip of choices, labelled in English and shown translated, as
+/// [`section`] titles are.
 pub(in crate::settings_window) fn segmented<T: Copy + PartialEq + 'static>(
     theme: &Theme,
     id: &'static str,
@@ -260,10 +266,12 @@ pub(in crate::settings_window) fn segmented<T: Copy + PartialEq + 'static>(
     enabled: bool,
     on_pick: impl Fn(T, &mut Window, &mut App) + 'static,
 ) -> Div {
-    let names = options.iter().map(|(_, label)| Some(*label)).collect();
+    let labels: Vec<SharedString> = options.iter().map(|(_, label)| t!(*label).into()).collect();
+    let names = labels.iter().cloned().map(Some).collect();
     let options = options
         .iter()
-        .map(|(value, label)| (*value, (*label).into_any_element()))
+        .zip(labels)
+        .map(|((value, _), label)| (*value, label.into_any_element()))
         .collect();
     segments(
         theme,
@@ -306,7 +314,7 @@ pub(in crate::settings_window) fn segmented_elements<T: Copy + PartialEq + 'stat
 fn segments<T: Copy + PartialEq + 'static>(
     theme: &Theme,
     id: &'static str,
-    (options, names): (Vec<(T, AnyElement)>, Vec<Option<&'static str>>),
+    (options, names): (Vec<(T, AnyElement)>, Vec<Option<SharedString>>),
     selected: Option<T>,
     enabled: bool,
     live: impl Fn(T) -> bool,

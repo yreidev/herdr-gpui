@@ -439,6 +439,7 @@ pub(crate) fn run() -> std::process::ExitCode {
                 crate::azure::install(cx);
             }
             cx.set_global(appearance.select(light_appearance(cx)));
+            crate::i18n::apply(cx.global::<InitialAppearance>().config.language);
             app_icon::install();
             crate::caffeine::install(cx);
             #[cfg(any(target_os = "macos", windows))]

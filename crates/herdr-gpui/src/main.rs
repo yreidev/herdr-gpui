@@ -76,6 +76,7 @@ mod github;
 mod group_menu;
 mod group_terminals;
 mod herdr_settings;
+mod i18n;
 mod icon_font_notice;
 mod icons;
 mod input;
@@ -167,6 +168,10 @@ mod smoke;
 mod test_executable;
 
 pub use error::{Error, Result};
+
+// `t!` looks each message up in the translations compiled in from `locales/`;
+// see the `i18n` module.
+rust_i18n::i18n!("locales");
 
 pub(crate) use {
     actions::{

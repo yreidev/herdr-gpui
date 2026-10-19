@@ -14,6 +14,7 @@ mod window;
 use super::{SettingsWindow, inputs::DropdownField, ui};
 pub(super) use fonts::size_control;
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 pub(super) use sidebar::Spacing;
 pub(super) use window::padding_ids;
 
@@ -25,10 +26,16 @@ pub(in crate::settings_window) const SHARED_READ_ONLY: &str =
 const SHARED_UNAVAILABLE: &str = "Herdr's settings are unavailable. Reload to retry.";
 
 /// The text on an override dropdown: the local choice, or what Herdr says.
+/// Both are the app's English, as every dropdown's choices are, and show
+/// translated.
 pub(super) fn override_label(shared_value: &str, local: Option<&str>) -> String {
     match local {
-        Some(choice) => choice.to_owned(),
-        None => format!("Use Herdr setting \u{b7} {shared_value}"),
+        Some(choice) => t!(choice).into_owned(),
+        None => t!(
+            "Use Herdr setting \u{b7} %{value}",
+            value = t!(shared_value)
+        )
+        .into_owned(),
     }
 }
 
@@ -37,7 +44,7 @@ impl SettingsWindow {
     /// written, saying why instead of showing the description.
     fn gate_shared(&self, row: ui::Row) -> ui::Row {
         match self.shared_gate() {
-            Some(reason) => row.disabled(reason),
+            Some(reason) => row.disabled(t!(reason)),
             None => row,
         }
     }
@@ -65,7 +72,7 @@ impl SettingsWindow {
     ) -> Stateful<Div> {
         let label = override_label(shared_value, local.and_then(|i| choices.get(i).copied()));
         let options: Vec<SharedString> = std::iter::once(override_label(shared_value, None))
-            .chain(choices.iter().map(|choice| (*choice).to_owned()))
+            .chain(choices.iter().map(|choice| t!(*choice).into_owned()))
             .map(SharedString::from)
             .collect();
         let selected = local.map_or(0, |index| index + 1);

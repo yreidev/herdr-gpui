@@ -24,6 +24,7 @@ mod font_weight;
 mod fonts;
 mod github;
 mod keybindings;
+mod language;
 mod layout;
 mod notifications;
 mod omarchy;
@@ -75,6 +76,7 @@ pub use fonts::symbol_fallbacks;
 pub use fonts::{FONT_SIZE_RANGE, FONT_SIZE_STEP, FontConfig};
 pub use github::{GitHubAccount, GitHubConfig};
 pub(crate) use github::{MAX_ACCOUNTS, valid_account_id, valid_owner};
+pub use language::Language;
 pub use layout::{Density, Layout, LayoutMode, Style};
 pub(crate) use notifications::NotificationDelivery;
 pub use notifications::{
@@ -173,6 +175,8 @@ pub struct Config {
     /// device's server keys can be layered under the same GUI overrides.
     pub(crate) keybinding_overrides: BTreeMap<String, Binding>,
     pub keybindings: Keymap,
+    /// The language the app's own text is shown in.
+    pub language: Language,
     pub layout: Layout,
     /// Configured families, sorted, that font resolution found no installed
     /// family for; `diagnostic` reports them.
@@ -451,6 +455,7 @@ impl Default for Config {
             keep_selection_after_copy: true,
             keybinding_overrides: BTreeMap::new(),
             keybindings: Keymap::default(),
+            language: Language::default(),
             layout: Layout::default(),
             missing_fonts: Vec::new(),
             missing_weight: None,
@@ -521,6 +526,7 @@ struct Settings {
     github: GitHubConfig,
     keep_selection_after_copy: Option<bool>,
     keybindings: BTreeMap<String, Binding>,
+    language: Language,
     layout: Layout,
     notifications: NotificationSettings,
     open_files_in: FileTarget,
@@ -955,6 +961,7 @@ impl Config {
         config.accent = settings.accent;
         config.contrast = settings.contrast;
         config.agents_placement = settings.agents_placement;
+        config.language = settings.language;
         config.usage = settings.usage;
         config.option_as_alt = settings.option_as_alt;
         config.open_links_in = settings.open_links_in;

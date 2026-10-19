@@ -1,6 +1,7 @@
 //! The section list and the footer: grouped sections under a search box, and
 //! the save status line.
 use super::*;
+use rust_i18n::t;
 
 impl SettingsWindow {
     pub(super) fn navigation(&self, cx: &mut Context<Self>) -> Stateful<Div> {
@@ -9,7 +10,7 @@ impl SettingsWindow {
         div()
             .id("settings-navigation")
             .role(Role::Navigation)
-            .aria_label("Settings sections")
+            .aria_label(t!("Settings sections"))
             .relative()
             .w(px(self.navigation_width.width(self.viewport_width)))
             .on_drag_move(
@@ -57,7 +58,7 @@ impl SettingsWindow {
                         .debug_selector(|| "settings-sections".into())
                         // Picking a section swaps the page beside it, as a tab does.
                         .role(Role::TabList)
-                        .aria_label("Sections")
+                        .aria_label(t!("Sections"))
                         .aria_orientation(Orientation::Vertical)
                         .flex_1()
                         .min_h_0()
@@ -99,7 +100,7 @@ impl SettingsWindow {
             .pb(px(4.))
             .text_size(px(10.))
             .text_color(rgb(self.theme.subtext()))
-            .child(group.label().to_uppercase())
+            .child(t!(group.label()).to_uppercase())
     }
 
     fn navigation_row(
@@ -113,7 +114,7 @@ impl SettingsWindow {
         div()
             .id(("settings-section", index))
             .role(Role::Tab)
-            .aria_label(section.label())
+            .aria_label(t!(section.label()))
             .aria_selected(selected)
             .relative()
             .map(|row| {
@@ -142,12 +143,13 @@ impl SettingsWindow {
                         theme.subtext()
                     })),
             )
-            .child(section.label())
+            .child(t!(section.label()))
             .on_click(
                 cx.listener(move |this, _, window, cx| this.select_section(section, window, cx)),
             )
     }
 
+    /// The English names of the drafts the window still holds.
     fn pending_drafts(&self) -> Vec<&'static str> {
         [
             (self.theme_dirty(), "theme"),
@@ -164,7 +166,7 @@ impl SettingsWindow {
         if let Some(error) = &self.error {
             error.clone()
         } else if self.loading {
-            "Loading preferences...".into()
+            t!("Loading preferences...").into()
         } else if let Some(status) = &self.status {
             status.clone()
         } else if pending.is_empty() {
@@ -172,15 +174,18 @@ impl SettingsWindow {
                 // Its account fields are a form with their own Save button.
                 #[cfg(feature = "cloud")]
                 Section::CloudDevices => {
-                    "Account fields save with Save; sign-in and removal apply at once.".into()
+                    t!("Account fields save with Save; sign-in and removal apply at once.").into()
                 }
-                _ => "All changes saved.".into(),
+                _ => t!("All changes saved.").into(),
             }
         } else {
-            format!(
-                "Unsaved: {} — saved when this window closes",
-                pending.join(", ")
+            let drafts: Vec<_> = pending.into_iter().map(|draft| t!(draft)).collect();
+            t!(
+                "Unsaved: %{drafts} — saved when this window closes",
+                // Lists take the language's own separator: Chinese uses "、".
+                drafts = drafts.join(&t!(", "))
             )
+            .into()
         }
     }
 
@@ -217,21 +222,26 @@ impl SettingsWindow {
             )
             .when(!pending.is_empty(), |footer| {
                 footer.child(
-                    self.control_choice("settings-footer-save", "Save now", false, !self.busy())
-                        .debug_selector(|| "settings-footer-save".into())
-                        .role(Role::Button)
-                        .aria_label("Save now")
-                        .flex_none()
-                        .px(px(10.))
-                        .py(px(3.))
-                        .on_click(cx.listener(|this, _, _, cx| this.save_pending_drafts(cx))),
+                    self.control_choice(
+                        "settings-footer-save",
+                        t!("Save now"),
+                        false,
+                        !self.busy(),
+                    )
+                    .debug_selector(|| "settings-footer-save".into())
+                    .role(Role::Button)
+                    .aria_label(t!("Save now"))
+                    .flex_none()
+                    .px(px(10.))
+                    .py(px(3.))
+                    .on_click(cx.listener(|this, _, _, cx| this.save_pending_drafts(cx))),
                 )
             })
             .child(
-                self.control_choice("settings-footer-reload", "Reload", false, true)
+                self.control_choice("settings-footer-reload", t!("Reload"), false, true)
                     .debug_selector(|| "settings-footer-reload".into())
                     .role(Role::Button)
-                    .aria_label("Reload")
+                    .aria_label(t!("Reload"))
                     .flex_none()
                     .px(px(10.))
                     .py(px(3.))

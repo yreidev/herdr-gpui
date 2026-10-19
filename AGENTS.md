@@ -144,6 +144,7 @@ agents in Herdr panes can use what only this client shows or keeps
 - Use the same geometry for painting, hit testing, and IME placement. Popup input and composition bounds must target the popup, not the underlying pane.
 - Keep glyph visibility separate from decorations: spaces and wide-character continuation cells may still need underline/strikethrough painting.
 - Preserve menu input isolation, focus behavior, Unicode composition, and semantic input routing. Do not synthesize terminal keys for operations with endpoint API methods.
+- Text the app shows goes through `rust_i18n::t!`, keyed by its English (`t!("Settings")`); a widget that takes `&'static str` labels translates them itself. Translate where text is shown, never in `label()`-style functions: element IDs, selectors, saved values, and what tests match on stay English, as do logs, CLI output, and the detailed causes in error types. A message without an entry in `locales/<locale>/` shows its English, so add one to the file for that part of the app (`common.<locale>.yml` when several parts show it). The locale is process-wide: tests never call `rust_i18n::set_locale`, and a translation test names its locale (`t!("Settings", locale = "zh-CN")`).
 - Activity indicators come from the daemon's snapshot, not guessed terminal output or a client-local seen ledger. Every client shows the same dot; do not reintroduce per-client acknowledgement without asking.
 
 ## Protocol And Safety

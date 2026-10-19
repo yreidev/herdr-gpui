@@ -3,6 +3,7 @@
 //! still exist.
 use super::Section;
 use crate::config::Feature;
+use rust_i18n::t;
 
 pub(super) struct Entry {
     pub section: Section,
@@ -254,6 +255,12 @@ pub(super) const CATALOG: &[Entry] = &[
     ),
     entry(
         Section::General,
+        "general-language",
+        "Language",
+        "For the app's own text; terminal output is never translated.",
+    ),
+    entry(
+        Section::General,
         "general-ports",
         "Show listening ports",
         "Port chips on workspaces with a dev server.",
@@ -440,6 +447,8 @@ pub(super) const CATALOG: &[Entry] = &[
 
 /// Indices into [`CATALOG`] of the entries whose title, description or page
 /// name contains `query`, ignoring case, in catalog order.
+/// The rows whose title, description, or page name holds `query`, in either
+/// the English or the language the app is showing.
 pub(super) fn search(query: &str) -> Vec<usize> {
     let query = query.trim().to_lowercase();
     if query.is_empty() {
@@ -451,7 +460,10 @@ pub(super) fn search(query: &str) -> Vec<usize> {
         .filter(|(_, entry)| {
             [entry.title, entry.description, entry.section.label()]
                 .iter()
-                .any(|text| text.to_lowercase().contains(&query))
+                .any(|text| {
+                    text.to_lowercase().contains(&query)
+                        || t!(*text).to_lowercase().contains(&query)
+                })
         })
         .map(|(index, _)| index)
         .collect()

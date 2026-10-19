@@ -88,6 +88,9 @@ raw-window-handle    = "0.6"
 # ureq already links.
 rustls               = { default-features = false, features = ["ring", "std", "tls12"], version = "0.23" }
 rusqlite             = { features = ["bundled"], version = "0.40" }
+# Interface translations from crates/herdr-gpui/locales, compiled in; the
+# library gpui-component uses.
+rust-i18n            = "4.2.4"
 rodio                = { default-features = false, features = ["playback", "symphonia-mp3", "tracing"], version = "0.22.2" }
 rustix               = { features = ["event", "fs", "process", "pty", "termios"], version = "=1.1.5" }
 secrecy              = { features = ["serde"], version = "=0.10.3" }
@@ -102,6 +105,9 @@ skrifa               = { default-features = false, features = ["std"], version =
 # Diff syntax colouring: bundled grammars, parsed with the pure-Rust regex
 # engine, no themes (colours come from the app's theme).
 syntect              = { default-features = false, features = ["default-syntaxes", "parsing", "regex-fancy"], version = "5.3" }
+# The OS language behind `language = "auto"`; the version GPUI's wgpu text
+# system already locks.
+sys-locale           = "0.3.2"
 # The version GPUI's screen capture already locks; only CPU and memory are read.
 sysinfo              = { default-features = false, features = ["disk", "system"], version = "0.39.6" }
 tar                  = "0.4"

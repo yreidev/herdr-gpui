@@ -3,6 +3,7 @@
 use super::*;
 use crate::fonts::StyledFont;
 use gpui::prelude::*;
+use rust_i18n::t;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum BarLayer {
@@ -42,7 +43,7 @@ impl HerdrWindow {
         let headings = &cx.global::<super::super::Headings>().0;
         let compact = self.compact_application_bar(window);
         let entries: Vec<_> = if compact {
-            vec![(None, SharedString::from("Menu"), false)]
+            vec![(None, SharedString::from(t!("Menu")), false)]
         } else {
             headings
                 .iter()
@@ -72,7 +73,7 @@ impl HerdrWindow {
             .debug_selector(|| "application-menu-bar".into())
             // The overlay's copy repeats this bar for the pointer only.
             .when(measure, |bar| {
-                bar.role(Role::MenuBar).aria_label("Menu bar")
+                bar.role(Role::MenuBar).aria_label(t!("Menu bar"))
             })
             .relative()
             .flex()
@@ -271,7 +272,7 @@ impl HerdrWindow {
         // the overlay is the menu and the highlighted row its active item.
         overlay = overlay.role(Role::Menu).aria_label(
             menu.current()
-                .map_or_else(|| SharedString::from("Menu"), |menu| menu.name.clone()),
+                .map_or_else(|| SharedString::from(t!("Menu")), |menu| menu.name.clone()),
         );
         let bar = self.menu.application_bar.bar.get();
         let content = self.menu.application_bar.content.get();
@@ -421,7 +422,7 @@ impl HerdrWindow {
                         .id("application-menu-back")
                         .debug_selector(|| "application-menu-back".into())
                         .role(Role::MenuItem)
-                        .aria_label(format!("Back to {}", current.name))
+                        .aria_label(t!("Back to %{menu}", menu = current.name))
                         .flex_none()
                         .p(px(8.))
                         .cursor_pointer()

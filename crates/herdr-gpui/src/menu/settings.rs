@@ -186,10 +186,15 @@ impl HerdrWindow {
                             error: None,
                         });
                         crate::caffeine::set_scope(config.status_bar.keep_awake_scope, cx);
+                        let language_changed = config.language != this.config.language;
+                        if language_changed {
+                            crate::i18n::apply(config.language);
+                        }
                         if config.keybindings != this.config.keybindings {
                             crate::actions::rebind_keys(cx);
-                        } else if config.layout.mode != this.config.layout.mode {
-                            // The View menu checks the layout in use.
+                        } else if config.layout.mode != this.config.layout.mode || language_changed {
+                            // The View menu checks the layout in use, and
+                            // every menu is in the app's language.
                             crate::menus::install(cx);
                         }
                         if this.config.notifications.delivery() == crate::config::NotificationDelivery::Off

@@ -1,14 +1,15 @@
-//! General: interface toggles, the optional `[features]` flags, clipboard
-//! feedback, merged worktrees, the browser skill, launch at login (Windows)
-//! and the update channel.
-use super::{CLIPBOARD_POSITIONS, SettingsWindow, on_off, ui};
+//! General: the language, interface toggles, the optional `[features]`
+//! flags, clipboard feedback, merged worktrees, the browser skill, launch at
+//! login (Windows) and the update channel.
+use super::{CLIPBOARD_POSITIONS, SettingsWindow, on_off, on_value, ui};
 use crate::settings_window::inputs::DropdownField;
 use crate::{
     agent_skill::{AgentSkill, Choice},
-    config::{ClipboardToast, Feature, UpdateChannel, preferences::Preference},
+    config::{ClipboardToast, Feature, Language, UpdateChannel, preferences::Preference},
     herdr_settings::Edit,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 impl SettingsWindow {
     pub(in crate::settings_window) fn render_general(&self, cx: &mut Context<Self>) -> Div {
@@ -34,6 +35,10 @@ impl SettingsWindow {
             .iter()
             .find_map(|(p, name)| (*p == base.1).then_some(*name))
             .unwrap_or_default();
+        let languages: Vec<_> = Language::ALL
+            .iter()
+            .map(|&language| (language, language.name()))
+            .collect();
         let merged = self.config.remove_merged_worktrees;
         let beta = self.config.updates.channel == UpdateChannel::Beta;
         let installed = AgentSkill::choice(cx) == Some(Choice::Installed);
@@ -51,8 +56,24 @@ impl SettingsWindow {
             .flex_col()
             .child(ui::section(theme, "Interface", None))
             .child(
-                ui::row(theme, "general-ports", "Show listening ports")
-                    .description("Port chips on workspaces with a dev server.")
+                ui::row(theme, "general-language", t!("Language"))
+                    .description(t!(
+                        "For the app's own text; terminal output is never translated."
+                    ))
+                    .control(ui::segmented(
+                        theme,
+                        "general-language-control",
+                        &languages,
+                        Some(self.config.language),
+                        true,
+                        on_value(cx, |this, language, _, cx| {
+                            this.save_preference(Preference::Language(language), cx);
+                        }),
+                    )),
+            )
+            .child(
+                ui::row(theme, "general-ports", t!("Show listening ports"))
+                    .description(t!("Port chips on workspaces with a dev server."))
                     .switch(self.preference_toggle(
                         "general-ports-toggle",
                         self.config.show_listening_ports,
@@ -61,8 +82,8 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "general-checkpoints", "Checkpoint agent turns")
-                    .description("Snapshot the worktree after each agent turn.")
+                ui::row(theme, "general-checkpoints", t!("Checkpoint agent turns"))
+                    .description(t!("Snapshot the worktree after each agent turn."))
                     .switch(self.preference_toggle(
                         "general-checkpoints-toggle",
                         self.config.agent_checkpoints,
@@ -71,8 +92,10 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "general-smooth-scroll", "Smooth scrolling")
-                    .description("Scroll terminal history between rows; off steps whole rows.")
+                ui::row(theme, "general-smooth-scroll", t!("Smooth scrolling"))
+                    .description(t!(
+                        "Scroll terminal history between rows; off steps whole rows."
+                    ))
                     .switch(self.preference_toggle(
                         "general-smooth-scroll-toggle",
                         self.config.smooth_scroll,
@@ -85,9 +108,11 @@ impl SettingsWindow {
             .child(ui::section(theme, "Clipboard", None))
             .child(
                 self.gate_shared(
-                    ui::row(theme, "general-copy-on-select", "Copy on select")
+                    ui::row(theme, "general-copy-on-select", t!("Copy on select"))
                         .tag(ui::Source::Herdr)
-                        .description("Off: \u{2318}C / Ctrl-C copies the highlighted selection."),
+                        .description(t!(
+                            "Off: \u{2318}C / Ctrl-C copies the highlighted selection."
+                        )),
                 )
                 .switch(
                     ui::toggle(theme, "general-copy-on-select-toggle", copy, ready).when(
@@ -101,7 +126,7 @@ impl SettingsWindow {
                 ),
             )
             .child(
-                ui::row(theme, "general-copied-toast", "Copied notification")
+                ui::row(theme, "general-copied-toast", t!("Copied notification"))
                     .tag(ui::Source::HerdrUi)
                     .control(self.override_dropdown(
                         DropdownField::ClipboardEnabled,
@@ -112,27 +137,31 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "general-clipboard-position", "Notification position")
-                    .tag(ui::Source::HerdrUi)
-                    .control(self.override_dropdown(
-                        DropdownField::ClipboardPosition,
-                        base_position,
-                        &position_names,
-                        position,
-                        cx,
-                    )),
+                ui::row(
+                    theme,
+                    "general-clipboard-position",
+                    t!("Notification position"),
+                )
+                .tag(ui::Source::HerdrUi)
+                .control(self.override_dropdown(
+                    DropdownField::ClipboardPosition,
+                    base_position,
+                    &position_names,
+                    position,
+                    cx,
+                )),
             )
             .child(ui::section(theme, "Worktrees", None))
             .child(
                 ui::row(
                     theme,
                     "general-merged-worktrees",
-                    "Remove worktrees of merged PRs",
+                    t!("Remove worktrees of merged PRs"),
                 )
-                .description(
+                .description(t!(
                     "Deletes a clean linked worktree and closes its workspace once its PR is \
-                     merged. The focused workspace asks first.",
-                )
+                     merged. The focused workspace asks first."
+                ))
                 .switch(self.preference_toggle(
                     "general-merged-worktrees-toggle",
                     merged,
@@ -145,26 +174,26 @@ impl SettingsWindow {
                 ui::row(
                     theme,
                     "general-browser-skill",
-                    "Teach local agents to use browser tabs",
+                    t!("Teach local agents to use browser tabs"),
                 )
-                .description(if installed {
+                .description(t!(if installed {
                     "Installed in ~/.claude and ~/.agents, kept up to date."
                 } else {
                     "Not installed."
-                })
+                }))
                 .control(
-                    ui::button(theme, skill_id, skill_label, true)
+                    ui::button(theme, skill_id, t!(skill_label), true)
                         .on_click(cx.listener(move |this, _, _, cx| this.save_skill(choice, cx))),
                 ),
             )
             .children(self.startup_rows(cx))
             .child(ui::section(theme, "Updates", None))
             .child(
-                ui::row(theme, "general-update-beta", "Install beta releases")
-                    .description(
+                ui::row(theme, "general-update-beta", t!("Install beta releases"))
+                    .description(t!(
                         "Betas ship before they are promoted to stable. Turning this off never \
-                         downgrades; Homebrew installations update in place while it is on.",
-                    )
+                         downgrades; Homebrew installations update in place while it is on."
+                    ))
                     .switch(self.preference_toggle(
                         "general-update-beta-toggle",
                         beta,
@@ -198,8 +227,8 @@ impl SettingsWindow {
             .map(|&feature| {
                 let id = feature.setting_id();
                 let on = features.enabled(feature);
-                ui::row(&self.theme, id, feature.label())
-                    .description(feature.description())
+                ui::row(&self.theme, id, t!(feature.label()))
+                    .description(t!(feature.description()))
                     .switch(self.preference_toggle(
                         format!("{id}-toggle"),
                         on,

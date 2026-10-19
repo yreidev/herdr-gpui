@@ -43,6 +43,7 @@ use crate::{
     herdr_settings,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 actions!(settings_window, [Close]);
 
@@ -108,7 +109,7 @@ fn open_with(
         WindowOptions {
             window_bounds: Some(WindowBounds::Windowed(bounds)),
             window_min_size: Some(size(px(680.), px(560.))),
-            titlebar: Some(crate::titlebar::options("Settings")),
+            titlebar: Some(crate::titlebar::options(&t!("Settings"))),
             app_owns_titlebar_drag: cfg!(target_os = "macos"),
             ..Default::default()
         },
@@ -291,7 +292,9 @@ impl SettingsWindow {
             }
         });
         let nav_search = cx.new(crate::search_input::SearchInput::new);
-        nav_search.update(cx, |input, cx| input.set_placeholder("Search settings", cx));
+        nav_search.update(cx, |input, cx| {
+            input.set_placeholder(&t!("Search settings"), cx)
+        });
         let search_changed = cx.subscribe(
             &nav_search,
             |this, input, _: &crate::search_input::Changed, cx| {
@@ -495,6 +498,8 @@ impl SettingsWindow {
             previous.is_none_or(|previous| previous.config.keybindings != self.config.keybindings);
         let layout_changed =
             previous.is_some_and(|previous| previous.config.layout.mode != self.config.layout.mode);
+        let language_changed =
+            previous.is_some_and(|previous| previous.config.language != self.config.language);
         // Future windows inherit an explicit Settings draft, but not a main
         // picker's cancellable hover preview. Logs follow live appearance.
         let previewing = cx.windows().into_iter().any(|window| {
@@ -515,9 +520,12 @@ impl SettingsWindow {
         if !previewing {
             crate::log_window::set_appearance(&self.config, &self.theme, cx);
         }
+        if language_changed {
+            crate::i18n::apply(self.config.language);
+        }
         if keys_changed {
             crate::actions::rebind_keys(cx);
-        } else if layout_changed {
+        } else if layout_changed || language_changed {
             crate::menus::install(cx);
         }
     }
@@ -587,7 +595,7 @@ impl SettingsWindow {
             return true;
         }
         self.closing = Some(window.window_handle());
-        self.status = Some("Finishing preferences before closing...".into());
+        self.status = Some(t!("Finishing preferences before closing...").into());
         self.theme_load_failed = false;
         self.drive_theme_intent(cx);
         false
@@ -751,11 +759,11 @@ impl Render for SettingsWindow {
                             .id("settings-body")
                             .debug_selector(|| "settings-body".into())
                             .role(Role::TabPanel)
-                            .aria_label(if searching.is_some() {
+                            .aria_label(t!(if searching.is_some() {
                                 "Results"
                             } else {
                                 self.section.label()
-                            })
+                            }))
                             .flex_1()
                             .min_w_0()
                             .min_h_0()
@@ -767,11 +775,11 @@ impl Render for SettingsWindow {
                                     .text_size(px(18.))
                                     .line_height(px(26.))
                                     .font_weight(FontWeight::SEMIBOLD)
-                                    .child(if searching.is_some() {
+                                    .child(t!(if searching.is_some() {
                                         "Results"
                                     } else {
                                         self.section.label()
-                                    }),
+                                    })),
                             )
                             .child(div().mb(px(16.)).when_some(
                                 self.section.lead().filter(|_| searching.is_none()),
@@ -780,7 +788,7 @@ impl Render for SettingsWindow {
                                         div()
                                             .text_size(px(12.))
                                             .text_color(rgb(theme.subtext()))
-                                            .child(lead),
+                                            .child(t!(lead)),
                                     )
                                 },
                             ))

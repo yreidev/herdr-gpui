@@ -200,6 +200,9 @@ fn second_cargo_build_is_fresh_for_archive_ordinary_and_linked_checkouts() {
     let repo = Sandbox::new();
     let build_twice = |path: &std::path::Path| {
         fs::create_dir_all(path.join("src")).unwrap();
+        // build.rs watches the translations; Cargo reruns a build script
+        // every time when a path it watches is missing.
+        fs::create_dir_all(path.join("locales")).unwrap();
         fs::write(path.join("Cargo.toml"), "[package]\nname = \"identity-fixture\"\nversion = \"0.0.0\"\nedition = \"2024\"\n[workspace]\n").unwrap();
         fs::write(
             path.join("src/main.rs"),

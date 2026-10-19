@@ -38,6 +38,12 @@ contrast = "standard"
 # the theme, "system" from Windows Settings > Personalization > Colors.
 # Other platforms keep the theme's. Terminal colors never change with it.
 accent = "theme"
+# The language of the app's own text (menus, Settings): "auto" takes the first
+# of the system's preferred languages the app has text in, or English; "en"
+# and "zh-CN" (Simplified Chinese) pick one. Text not translated yet stays in
+# English, and terminal output is never translated. Also under Settings >
+# General.
+language = "auto"
 
 # Ask before closing a tab (closing terminates its terminal processes).
 confirm_close_tab = true

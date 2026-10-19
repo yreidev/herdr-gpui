@@ -78,6 +78,25 @@ Linux X11 and Wayland both need manual desktop coverage; the performance harness
 and AppKit click probes remain macOS-only. The GUI test sandbox resolves the
 parent Wayland socket without exposing its HOME or runtime directory to daemons.
 
+## Translations
+
+The menus and Settings show in English or Simplified Chinese; see the
+`language` setting in the [README](crates/herdr-gpui/README.md#configuration).
+To improve a translation, edit the files under
+`crates/herdr-gpui/locales/<locale>/`: one per part of the app, named
+`<area>.<locale>.yml`, with `common.<locale>.yml` for text several parts show.
+Each key is the English text in the code, exactly, and lives in one file only;
+a translation keeps every `%{name}` placeholder. Each language's `README.md`
+there holds its style notes and glossary; follow them so a term reads the same
+everywhere.
+
+Adding a language takes a new `locales/<locale>/` directory, a `Language`
+variant in `crates/herdr-gpui/src/config/language.rs` (its config value, its
+own name for Settings, and its place in `ALL`), the system language tags that
+pick it in `crates/herdr-gpui/src/i18n.rs`, and the `language` docs in
+`config-gpui.example.toml` and the README. Ask a native speaker to read the
+result in the running app; a test only checks keys and placeholders.
+
 ## Pull Requests
 
 - Use conventional commit subjects: `feat`, `fix`, `perf`, `refactor`, `revert`,

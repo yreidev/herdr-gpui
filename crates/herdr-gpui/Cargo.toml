@@ -37,6 +37,7 @@ percent-encoding.workspace     = true
 pulldown-cmark.workspace       = true
 rodio.workspace                = true
 rusqlite.workspace             = true
+rust-i18n.workspace            = true
 rustls                         = { optional = true, workspace = true }
 secrecy.workspace              = true
 serde.workspace                = true
@@ -46,6 +47,7 @@ sha1.workspace                 = true
 sha2.workspace                 = true
 skrifa.workspace               = true
 sysinfo.workspace              = true
+sys-locale.workspace           = true
 syntect.workspace              = true
 tar.workspace                  = true
 tempfile.workspace             = true

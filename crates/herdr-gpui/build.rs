@@ -56,6 +56,9 @@ fn main() -> Result<(), BuildError> {
     println!("cargo:rerun-if-changed=build_identity.rs");
     println!("cargo:rerun-if-changed=release_version.rs");
     println!("cargo:rerun-if-changed=windows_resource.rs");
+    // `rust_i18n::i18n!` compiles the translations in, and Cargo would not
+    // otherwise notice an edit to them.
+    println!("cargo:rerun-if-changed=locales");
     println!("cargo:rerun-if-env-changed=HERDR_BUILD_PR_NUMBER");
     let manifest = std::path::PathBuf::from(
         std::env::var_os("CARGO_MANIFEST_DIR").ok_or(BuildError::MissingManifestDir)?,

@@ -3,6 +3,7 @@
 use super::{SettingsWindow, catalog, ui};
 use crate::config::ThemeName;
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::collections::HashMap;
 
 /// Where each row was last painted, by row id, for scrolling to it.
@@ -139,7 +140,7 @@ impl SettingsWindow {
             return div()
                 .debug_selector(|| "settings-search-empty".into())
                 .text_color(rgb(theme.subtext()))
-                .child("No settings match.");
+                .child(t!("No settings match."));
         }
         div().flex().flex_col().children(
             results
@@ -149,23 +150,24 @@ impl SettingsWindow {
                 .enumerate()
                 .map(|(n, (index, entry))| {
                     let id = format!("settings-search-result-{n}");
-                    let title = format!("{} \u{203a} {}", entry.section.label(), entry.title);
+                    let section = t!(entry.section.label());
+                    let title = format!("{section} \u{203a} {}", t!(entry.title));
                     let mut row = ui::row(theme, id.clone(), title.clone());
                     if !entry.description.is_empty() {
-                        row = row.description(entry.description);
+                        row = row.description(t!(entry.description));
                     }
                     row.control(
                         div()
                             .text_size(px(10.))
                             .text_color(rgb(theme.subtext()))
-                            .child(entry.section.label()),
+                            .child(section),
                     )
                     .into_div()
                     .id(ElementId::Name(id.into()))
                     .role(Role::Button)
                     .aria_label(title)
                     .when(!entry.description.is_empty(), |row| {
-                        row.aria_description(entry.description)
+                        row.aria_description(t!(entry.description))
                     })
                     .cursor_pointer()
                     .hover(|row| row.bg(rgb(theme.active)))
