@@ -7,6 +7,8 @@ use crate::code_server::{
     Launcher, Startup,
     launcher::{self, Cli, LICENSE_TERMS, LICENSE_URL, PRIVACY_URL},
 };
+use rust_i18n::t;
+use std::borrow::Cow;
 
 impl SettingsWindow {
     /// The mode in effect, or `None` while VS Code is still being looked for.
@@ -47,7 +49,7 @@ impl SettingsWindow {
         let cli = Launcher::cli(cx);
         let can_start = crate::browser::EMBEDDED && matches!(cli, Some(Cli::Found(_)));
         let choice = |id: &'static str, label: &'static str, choice: CodeMode, enabled: bool| {
-            self.control_choice(id, label, mode == Some(choice), enabled)
+            self.control_choice(id, t!(label), mode == Some(choice), enabled)
                 .debug_selector(move || id.into())
                 .when(enabled, |button| {
                     button.on_click(cx.listener(move |this, _, _, cx| {
@@ -57,17 +59,19 @@ impl SettingsWindow {
         };
         let note = match cli {
             _ if !crate::browser::EMBEDDED => {
-                Some("This build shows no pages, so it starts no VS Code.".into())
+                Some(t!("This build shows no pages, so it starts no VS Code.").into())
             }
-            Some(Cli::Unknown | Cli::Finding) => Some("Looking for VS Code\u{2026}".into()),
-            Some(Cli::Found(program)) => Some(SharedString::from(format!(
-                "VS Code: {}",
-                program.display()
+            Some(Cli::Unknown | Cli::Finding) => Some(t!("Looking for VS Code\u{2026}").into()),
+            Some(Cli::Found(program)) => Some(SharedString::from(t!(
+                "VS Code: %{program}",
+                program = program.display()
             ))),
             Some(Cli::Missing) | None => Some(
-                "VS Code was not found on your PATH or in Applications. Install it to have \
+                t!(
+                    "VS Code was not found on your PATH or in Applications. Install it to have \
                  the app start it, or use the address of a server you run."
-                    .into(),
+                )
+                .into(),
             ),
         };
         self.control_card("VS Code")
@@ -99,25 +103,34 @@ impl SettingsWindow {
 
     /// The server the app starts: its license until accepted, then how it is.
     pub(super) fn render_code_start(&self, cx: &mut Context<Self>) -> Div {
-        let card = self.control_card("Server").child(self.control_note(
+        let card = self.control_card("Server").child(self.control_note(t!(
             "The app runs `code serve-web` on 127.0.0.1 when a VS Code tab first needs it, \
-             and stops it when it quits.",
-        ));
+             and stops it when it quits."
+        )));
         match Launcher::startup(cx, &self.config.code) {
             Startup::Consent => card.child(self.render_code_license(cx)),
-            Startup::Idle => card.child(self.control_note("Not started yet.")),
-            Startup::Starting { .. } => card
-                .child(self.control_note("Starting VS Code\u{2026} (the first run downloads it)")),
-            Startup::Ready { url } => card.child(self.render_code_state(
-                "icons/pass.svg",
-                self.theme.palette[2],
-                format!("Running on {}", url.address()).into(),
-            )),
-            Startup::Failed { error, .. } => card.child(self.render_code_state(
-                "icons/error.svg",
-                self.theme.palette[1],
-                format!("{error} Retrying\u{2026}").into(),
-            )),
+            Startup::Idle => card.child(self.control_note(t!("Not started yet."))),
+            Startup::Starting { .. } => card.child(
+                self.control_note(t!("Starting VS Code\u{2026} (the first run downloads it)")),
+            ),
+            Startup::Ready { url } => card.child(
+                self.render_code_state(
+                    "icons/pass.svg",
+                    self.theme.palette[2],
+                    t!("Running on %{address}", address = url.address())
+                        .into_owned()
+                        .into(),
+                ),
+            ),
+            Startup::Failed { error, .. } => card.child(
+                self.render_code_state(
+                    "icons/error.svg",
+                    self.theme.palette[1],
+                    t!("%{error} Retrying\u{2026}", error = error)
+                        .into_owned()
+                        .into(),
+                ),
+            ),
             // The mode card says why.
             Startup::Address | Startup::Finding | Startup::Missing => card,
         }
@@ -125,7 +138,7 @@ impl SettingsWindow {
 
     /// The terms to accept before the app may start VS Code.
     fn render_code_license(&self, cx: &mut Context<Self>) -> Div {
-        let link = |id: &'static str, label: &'static str, url: &'static str| {
+        let link = |id: &'static str, label: Cow<'static, str>, url: &'static str| {
             div()
                 .id(id)
                 .text_color(crate::menu::accent(&self.theme))
@@ -135,7 +148,7 @@ impl SettingsWindow {
                 .child(label)
         };
         let accept = self
-            .control_choice("settings-code-accept", "Accept and start", false, true)
+            .control_choice("settings-code-accept", t!("Accept and start"), false, true)
             .debug_selector(|| "settings-code-accept".into())
             .flex_none()
             .on_click(cx.listener(|this, _, _, cx| this.accept_code_license(cx)));
@@ -144,7 +157,7 @@ impl SettingsWindow {
             .flex()
             .flex_col()
             .gap(px(12.))
-            .child(div().min_w_0().child(LICENSE_TERMS))
+            .child(div().min_w_0().child(t!(LICENSE_TERMS)))
             .child(
                 div()
                     .flex()
@@ -152,12 +165,12 @@ impl SettingsWindow {
                     .gap(px(16.))
                     .child(link(
                         "settings-code-license-link",
-                        "License Terms",
+                        t!("License Terms"),
                         LICENSE_URL,
                     ))
                     .child(link(
                         "settings-code-privacy-link",
-                        "Privacy Statement",
+                        t!("Privacy Statement"),
                         PRIVACY_URL,
                     )),
             )

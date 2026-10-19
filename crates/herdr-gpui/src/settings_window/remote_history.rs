@@ -6,6 +6,7 @@ use super::SettingsWindow;
 use crate::herdr_settings::RemotePaneHistory;
 use gpui::{AsyncApp, Context, WeakEntity};
 use herdr_client::{ConnectTarget, ScriptHost};
+use rust_i18n::t;
 use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
@@ -301,7 +302,13 @@ fn queue_reload(
                     failure.get_or_insert(error);
                 }
             }
-            failure.map(|error| format!("Saved; host daemon reload not queued: {error}"))
+            failure.map(|error| {
+                t!(
+                    "Saved; host daemon reload not queued: %{error}",
+                    error = error
+                )
+                .into_owned()
+            })
         })
         .ok()
         .flatten()

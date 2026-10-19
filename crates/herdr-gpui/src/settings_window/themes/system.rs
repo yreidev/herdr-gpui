@@ -7,6 +7,7 @@ use crate::{
     contrast::{Contrast, luminance},
 };
 use gpui::{Context, ScrollStrategy};
+use rust_i18n::t;
 
 /// What a theme is paired with when following starts: the current theme
 /// keeps the side its background suits, and these fill the other.
@@ -189,7 +190,9 @@ impl SettingsWindow {
                 let (value, theme) = match result {
                     Ok(loaded) => loaded,
                     Err(error) => {
-                        this.error = Some(format!("Apply system appearance: {error}"));
+                        this.error = Some(
+                            t!("Apply system appearance: %{error}", error = error).into_owned(),
+                        );
                         cx.notify();
                         return;
                     }

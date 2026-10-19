@@ -9,6 +9,7 @@ use crate::{
     config::{Config, corners},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// Lines of the user's own script the card previews.
 const PREVIEW_LINES: usize = 6;
@@ -39,13 +40,18 @@ impl SettingsWindow {
                 .flex_col()
                 .gap(px(4.))
                 .child(
-                    self.control_switch(id, "Run the setup script when it connects", on, enabled)
-                        .when(enabled, |row| {
-                            row.on_click(cx.listener(move |this, _, _, cx| {
-                                toggle(this);
-                                cx.notify();
-                            }))
-                        }),
+                    self.control_switch(
+                        id,
+                        t!("Run the setup script when it connects"),
+                        on,
+                        enabled,
+                    )
+                    .when(enabled, |row| {
+                        row.on_click(cx.listener(move |this, _, _, cx| {
+                            toggle(this);
+                            cx.notify();
+                        }))
+                    }),
                 )
                 .child(
                     self.control_note(crate::cloud_setup::summary(&self.config.cloud, provider)),
@@ -63,17 +69,17 @@ impl SettingsWindow {
             .relative()
             .debug_selector(|| "cloud-setup".into())
             .child(super::super::search::track_bounds("cloud-setup".into()))
-            .child(self.control_note(
+            .child(self.control_note(t!(
                 "Runs once, in a setup tab, the first time a new cloud device connects: \
                  the agents switched on here, then the setup script from [cloud] in the \
-                 config file. A provider's table, such as [cloud.coder], replaces either.",
-            ));
+                 config file. A provider's table, such as [cloud.coder], replaces either."
+            )));
         for agent in Agent::ALL.iter().copied() {
             let on = picked.contains(&agent);
             card = card.child(
                 self.control_switch(
                     format!("cloud-setup-agent-{}", agent.key()),
-                    format!("Install {}", agent.label()),
+                    t!("Install %{label}", label = agent.label()).into_owned(),
                     on,
                     ready,
                 )
@@ -103,7 +109,7 @@ impl SettingsWindow {
 
     fn cloud_setup_preview(&self) -> Div {
         let Some(script) = self.config.cloud.shared_setup().map(str::trim) else {
-            return self.control_note("No setup script of your own.");
+            return self.control_note(t!("No setup script of your own."));
         };
         let lines: Vec<&str> = script.lines().collect();
         let more = lines.len().saturating_sub(PREVIEW_LINES);
@@ -123,7 +129,7 @@ impl SettingsWindow {
                     .map(|line| div().child(if line.is_empty() { " " } else { line }.to_owned())),
             )
             .when(more > 0, |preview| {
-                preview.child(div().child(format!("… {more} more lines")))
+                preview.child(div().child(t!("… %{more} more lines", more = more).into_owned()))
             })
     }
 
@@ -132,10 +138,12 @@ impl SettingsWindow {
         let path = Config::local_path().ok()?;
         Some(
             div().flex().child(
-                self.cloud_button("cloud-setup-edit", "Edit setup script in config file", true)
-                    .on_click(move |_, _, cx| {
-                        super::super::pages::open_path(false, path.clone(), cx)
-                    }),
+                self.cloud_button(
+                    "cloud-setup-edit",
+                    t!("Edit setup script in config file"),
+                    true,
+                )
+                .on_click(move |_, _, cx| super::super::pages::open_path(false, path.clone(), cx)),
             ),
         )
     }

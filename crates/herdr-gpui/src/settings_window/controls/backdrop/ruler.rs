@@ -3,6 +3,7 @@
 //! pointer; either is written once, when the button is released, so a drag
 //! is one save rather than one per pixel.
 use super::*;
+use rust_i18n::t;
 use std::{cell::Cell, rc::Rc};
 
 /// The ruler's ends, in percent.
@@ -210,7 +211,7 @@ impl SettingsWindow {
             .flex_col()
             .gap(px(4.))
             .py(px(8.))
-            .child("Background opacity")
+            .child(t!("Background opacity"))
             .child(
                 div()
                     // Room for the knob and the end labels to overhang.

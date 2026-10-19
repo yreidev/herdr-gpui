@@ -7,6 +7,7 @@ use crate::{
     code_server::{self, Server},
     config::{CodeEdit, CodeMode},
 };
+use rust_i18n::t;
 
 mod start;
 
@@ -372,11 +373,11 @@ impl SettingsWindow {
         let button = self
             .control_choice(
                 "settings-code-test",
-                if testing {
+                t!(if testing {
                     "Testing\u{2026}"
                 } else {
                     "Test connection"
-                },
+                }),
                 false,
                 can_test,
             )
@@ -386,10 +387,10 @@ impl SettingsWindow {
                 button.on_click(cx.listener(|this, _, _, cx| this.test_code_connection(cx)))
             });
         self.control_card("Server")
-            .child(self.control_note(
+            .child(self.control_note(t!(
                 "Start a server with `code serve-web`, then paste the address it prints, with \
-                 its ?tkn= token.",
-            ))
+                 its ?tkn= token."
+            )))
             .child(field)
             .when(invalid, |card| {
                 card.child(self.control_note(
@@ -419,8 +420,8 @@ impl SettingsWindow {
             Test::Passed(server) => (
                 "icons/pass.svg",
                 theme.palette[2],
-                "Connected to VS Code".into(),
-                Some(format!("commit {}", server.short_commit()).into()),
+                t!("Connected to VS Code").into(),
+                Some(t!("commit %{commit}", commit = server.short_commit()).into()),
             ),
             Test::Failed(message) => ("icons/error.svg", theme.palette[1], message.clone(), None),
         };

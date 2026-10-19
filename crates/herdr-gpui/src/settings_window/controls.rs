@@ -17,6 +17,7 @@ use crate::{
     search_input::{Changed, SearchInput},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 pub(in crate::settings_window) const FACES: [(FontFace, &str); 4] = [
     (FontFace::Terminal, "Terminal"),
@@ -53,7 +54,7 @@ impl Controls {
     pub(super) fn new(cx: &mut Context<SettingsWindow>) -> Self {
         let search = cx.new(SearchInput::new);
         search.update(cx, |input, cx| {
-            input.set_placeholder("Search installed fonts...", cx)
+            input.set_placeholder(&t!("Search installed fonts..."), cx)
         });
         let subscription = cx.subscribe(&search, |this, search, _: &Changed, cx| {
             this.controls.filtered = filter_fonts(&this.controls.names, search.read(cx).text());
@@ -63,7 +64,7 @@ impl Controls {
         });
         let integration_search = cx.new(SearchInput::new);
         integration_search.update(cx, |input, cx| {
-            input.set_placeholder("Search integrations by name or ID...", cx)
+            input.set_placeholder(&t!("Search integrations by name or ID..."), cx)
         });
         let integration_changed = cx.subscribe(&integration_search, |this, _, _: &Changed, cx| {
             this.body_scroll.set_offset(Point::default());
@@ -89,7 +90,7 @@ impl Controls {
             saving_sizes: Vec::new(),
             local_path: Config::local_path()
                 .map(|path| path.display().to_string())
-                .unwrap_or_else(|error| format!("Unavailable ({error})")),
+                .unwrap_or_else(|error| t!("Unavailable (%{error})", error = error).into_owned()),
             local_file: Config::local_path().ok(),
             ruler: backdrop::Ruler::default(),
             _search_changed: subscription,

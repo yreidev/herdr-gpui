@@ -6,6 +6,7 @@ use crate::{
     search_input::SearchInput,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::rc::Rc;
 
 /// Curated host tints, muted enough to sit behind sidebar text.
@@ -177,7 +178,7 @@ pub(in crate::settings_window) fn swatch_row(
                         div()
                             .text_size(px(11.))
                             .text_color(rgb(theme.muted))
-                            .child(hint),
+                            .child(t!(hint)),
                     )
                 }),
         )

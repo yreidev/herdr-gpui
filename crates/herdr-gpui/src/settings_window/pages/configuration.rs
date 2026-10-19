@@ -1,6 +1,7 @@
 //! Configuration: the files behind these settings, and reload.
 use super::{SettingsWindow, ui};
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::path::PathBuf;
 
 /// Reveals `path` in the file manager, or opens it in the default editor.
@@ -55,16 +56,16 @@ impl SettingsWindow {
                 "Herdr configuration",
                 ui::Source::Herdr,
                 shared_path.as_ref().map_or_else(
-                    || "Unavailable".to_owned(),
+                    || t!("Unavailable").into_owned(),
                     |path| path.display().to_string(),
                 ),
                 shared_path.clone(),
             )))
             .child(
-                ui::row(theme, "config-reload", "Reload configuration")
-                    .description("Re-reads both files. Does not restart the daemon.")
+                ui::row(theme, "config-reload", t!("Reload configuration"))
+                    .description(t!("Re-reads both files. Does not restart the daemon."))
                     .control(
-                        ui::button(theme, "config-reload-button", "Reload", true)
+                        ui::button(theme, "config-reload-button", t!("Reload"), true)
                             .on_click(cx.listener(|this, _, _, cx| this.reload(cx))),
                     ),
             )
@@ -77,7 +78,7 @@ impl SettingsWindow {
         source: ui::Source,
         path: String,
     ) -> ui::Row {
-        ui::row(&self.theme, id, title)
+        ui::row(&self.theme, id, t!(title))
             .tag(source)
             .description(path)
     }
@@ -107,7 +108,7 @@ impl SettingsWindow {
             let enabled = file.is_some();
             let file = file.clone();
             row = row.control(
-                ui::button(&self.theme, format!("{id}-{suffix}"), label, enabled).when(
+                ui::button(&self.theme, format!("{id}-{suffix}"), t!(label), enabled).when(
                     enabled,
                     |button| {
                         button.on_click(move |_, _, cx| {

@@ -6,6 +6,7 @@ use crate::{
     settings_window::inputs::NumberField,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// The four padded sides, in the order the page lists them.
 pub(in crate::settings_window) const PADDING_SIDES: [(Axis, Side); 4] = [
@@ -53,9 +54,9 @@ impl SettingsWindow {
         let view = cx.entity().downgrade();
         ui::row(&self.theme, row, title)
             .when(axis == Axis::X && side == Side::Start, |row| {
-                row.description(
-                    "Beside the sidebar. A deprecated sidebar_gap stands in while unset.",
-                )
+                row.description(t!(
+                    "Beside the sidebar. A deprecated sidebar_gap stands in while unset."
+                ))
             })
             .control(ui::number(
                 &self.theme,

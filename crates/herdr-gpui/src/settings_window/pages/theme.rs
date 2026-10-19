@@ -8,6 +8,7 @@ use crate::{
     settings_window::themes::{Choice, FOLLOW, Scope},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 #[derive(Clone, Copy, PartialEq)]
 enum Mode {
@@ -97,8 +98,10 @@ impl SettingsWindow {
         } else {
             Mode::Dark
         };
-        ui::row(&self.theme, "theme-mode", "Appearance")
-            .description("Light, dark, or follow the system. Pick a theme below to change it.")
+        ui::row(&self.theme, "theme-mode", t!("Appearance"))
+            .description(t!(
+                "Light, dark, or follow the system. Pick a theme below to change it."
+            ))
             .control(ui::segmented(
                 &self.theme,
                 "theme-mode-control",
@@ -125,11 +128,11 @@ impl SettingsWindow {
     fn theme_side_row(&self, cx: &mut Context<Self>) -> Option<ui::Row> {
         let value = self.drafted_theme();
         ThemeName::follows_system(value).then(|| {
-            ui::row(&self.theme, "theme-side", "Editing")
-                .description(format!(
-                    "Which side of the pair the themes below change. Light: {} \u{b7} Dark: {}",
-                    ThemeName::side(value, true),
-                    ThemeName::side(value, false)
+            ui::row(&self.theme, "theme-side", t!("Editing"))
+                .description(t!(
+                    "Which side of the pair the themes below change. Light: %{light} \u{b7} Dark: %{dark}",
+                    light = t!(ThemeName::side(value, true)),
+                    dark = t!(ThemeName::side(value, false))
                 ))
                 .control(ui::segmented(
                     &self.theme,
@@ -148,9 +151,11 @@ impl SettingsWindow {
 
     fn theme_follow_row(&self, cx: &mut Context<Self>) -> ui::Row {
         let following = self.config.theme == FOLLOW;
-        ui::row(&self.theme, "theme-follow", "Follow Herdr's theme")
+        ui::row(&self.theme, "theme-follow", t!("Follow Herdr's theme"))
             .tag(ui::Source::Herdr)
-            .description("Use the theme set in Herdr's own config instead of a GUI choice.")
+            .description(t!(
+                "Use the theme set in Herdr's own config instead of a GUI choice."
+            ))
             .switch(
                 ui::toggle(&self.theme, "theme-follow-toggle", following, true).on_click(
                     cx.listener(move |this, _, _, cx| {
@@ -176,8 +181,8 @@ impl SettingsWindow {
 
     fn theme_contrast_row(&self, cx: &mut Context<Self>) -> ui::Row {
         let high = self.config.contrast == Contrast::High;
-        ui::row(&self.theme, "theme-contrast", "High contrast")
-            .description("Raise text and marker contrast on every theme.")
+        ui::row(&self.theme, "theme-contrast", t!("High contrast"))
+            .description(t!("Raise text and marker contrast on every theme."))
             .switch(
                 ui::toggle(&self.theme, "theme-contrast-toggle", high, true).on_click(cx.listener(
                     move |this, _, _, cx| {
@@ -199,11 +204,11 @@ impl SettingsWindow {
             (false, _) => Library::Herdr,
         };
         let note = if Scope::Herdr.editable() {
-            "Ghostty themes apply to this app; Herdr themes are shared."
+            t!("Ghostty themes apply to this app; Herdr themes are shared.")
         } else {
-            "Herdr's themes are read-only on this platform."
+            t!("Herdr's themes are read-only on this platform.")
         };
-        ui::row(&self.theme, "theme-source", "Source")
+        ui::row(&self.theme, "theme-source", t!("Source"))
             .description(note)
             .control(ui::segmented(
                 &self.theme,
@@ -233,7 +238,7 @@ impl SettingsWindow {
     fn theme_open_file(&self, cx: &mut Context<Self>) -> Option<Div> {
         let path = theme_file(self.edited_theme())?;
         Some(div().mt(px(8.)).flex().child(
-            ui::button(&self.theme, "theme-open-file", "Open theme file", true).on_click(
+            ui::button(&self.theme, "theme-open-file", t!("Open theme file"), true).on_click(
                 cx.listener(move |_, _, _, cx| super::open_path(false, path.clone(), cx)),
             ),
         ))

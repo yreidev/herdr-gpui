@@ -27,6 +27,7 @@ use crate::{
     search_input::SearchInput,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use secrecy::SecretString;
 use std::collections::HashMap;
 
@@ -416,11 +417,13 @@ impl SettingsWindow {
         });
         if let Some(card) = &mut self.azure_card {
             card.message = Some(match started {
-                Ok(Ok(())) => {
-                    format!("Creating Azure VM {name}. The device picker shows its progress.")
-                }
+                Ok(Ok(())) => t!(
+                    "Creating Azure VM %{name}. The device picker shows its progress.",
+                    name = name
+                )
+                .into_owned(),
                 Ok(Err(error)) => error.to_string(),
-                Err(_) => "Open a main Herdr window to create a VM.".into(),
+                Err(_) => t!("Open a main Herdr window to create a VM.").into(),
             });
         }
         cx.notify();
@@ -450,11 +453,13 @@ impl SettingsWindow {
         });
         if let Some(card) = &mut self.azure_card {
             card.message = Some(match started {
-                Ok(Ok(())) => {
-                    format!("Creating Azure sandbox {name}. The device picker shows its progress.")
-                }
+                Ok(Ok(())) => t!(
+                    "Creating Azure sandbox %{name}. The device picker shows its progress.",
+                    name = name
+                )
+                .into_owned(),
                 Ok(Err(error)) => error.to_string(),
-                Err(_) => "Open a main Herdr window to create a sandbox.".into(),
+                Err(_) => t!("Open a main Herdr window to create a sandbox.").into(),
             });
         }
         cx.notify();
@@ -488,7 +493,7 @@ impl SettingsWindow {
         ready: bool,
         cx: &mut Context<Self>,
     ) -> Stateful<Div> {
-        self.control_switch(id, "Install Herdr when missing", install, ready)
+        self.control_switch(id, t!("Install Herdr when missing"), install, ready)
             .when(ready, |row| {
                 row.on_click(cx.listener(|this, _, _, cx| {
                     if let Some(card) = &mut this.azure_card {
@@ -532,27 +537,27 @@ impl SettingsWindow {
         let status = match &card.account {
             Account::Unconfigured { az_available } => {
                 if *az_available {
-                    "Azure CLI (`az`) detected. Enter Subscription ID or click Save to use active CLI account."
-                        .to_owned()
+                    t!("Azure CLI (`az`) detected. Enter Subscription ID or click Save to use active CLI account.").into_owned()
                 } else {
-                    "Not configured. Enter a Subscription ID and credentials, then Save.".to_owned()
+                    t!("Not configured. Enter a Subscription ID and credentials, then Save.")
+                        .into_owned()
                 }
             }
-            Account::Checking => "Checking…".to_owned(),
+            Account::Checking => t!("Checking…").into_owned(),
             Account::Known { overview, .. } => match &overview.credential {
                 Ok(CredentialStatus::AzureCli) => {
-                    "Authenticated via active Azure CLI (`az`) account.".to_owned()
+                    t!("Authenticated via active Azure CLI (`az`) account.").into_owned()
                 }
                 Ok(CredentialStatus::SavedSecret) => {
-                    "Authenticated via saved Service Principal client secret.".to_owned()
+                    t!("Authenticated via saved Service Principal client secret.").into_owned()
                 }
                 Ok(CredentialStatus::EnvironmentSecret) => {
-                    "Authenticated via HERDR_AZURE_CLIENT_SECRET.".to_owned()
+                    t!("Authenticated via HERDR_AZURE_CLIENT_SECRET.").into_owned()
                 }
-                Ok(CredentialStatus::Missing) => {
+                Ok(CredentialStatus::Missing) => t!(
                     "Subscription configured. Add a client secret or log into `az` CLI to connect."
-                        .to_owned()
-                }
+                )
+                .into_owned(),
                 Err(error) => error.to_string(),
             },
         };
@@ -563,10 +568,10 @@ impl SettingsWindow {
         let account = self
             .control_card("Azure")
             .debug_selector(|| "cloud-azure-card".into())
-            .child(self.control_note(
+            .child(self.control_note(t!(
                 "VMs and Container Apps sandboxes in one Azure subscription, used as devices. \
-                 VMs are reached over SSH; sandboxes through the Azure data plane.",
-            ))
+                 VMs are reached over SSH; sandboxes through the Azure data plane."
+            )))
             .child(div().min_w_0().child(status))
             .children(
                 FIELDS
@@ -581,7 +586,7 @@ impl SettingsWindow {
             .child(self.cloud_field("Client Secret", card.secret.clone().into()))
             .child(
                 div().flex().justify_end().child(
-                    self.cloud_button("cloud-azure-save", "Save", ready)
+                    self.cloud_button("cloud-azure-save", t!("Save"), ready)
                         .when(ready, |button| {
                             button.on_click(cx.listener(|this, _, _, cx| this.save_azure(cx)))
                         }),
@@ -599,7 +604,7 @@ impl SettingsWindow {
             .children(self.azure_setup_switch("cloud-azure-vm-setup", card.setup, ready, cx))
             .child(
                 div().flex().justify_end().child(
-                    self.cloud_button("cloud-azure-create", "Create VM", create)
+                    self.cloud_button("cloud-azure-create", t!("Create VM"), create)
                         .when(create, |button| {
                             button.on_click(cx.listener(|this, _, _, cx| this.create_azure_vm(cx)))
                         }),
@@ -619,7 +624,7 @@ impl SettingsWindow {
             .children(self.azure_setup_switch("cloud-azure-sandbox-setup", card.setup, ready, cx))
             .child(
                 div().flex().justify_end().child(
-                    self.cloud_button("cloud-azure-create-sandbox", "Create sandbox", create)
+                    self.cloud_button("cloud-azure-create-sandbox", t!("Create sandbox"), create)
                         .when(create, |button| {
                             button.on_click(
                                 cx.listener(|this, _, _, cx| this.create_azure_sandbox(cx)),
@@ -637,20 +642,26 @@ impl SettingsWindow {
             devices = devices.child(outcome);
         }
         if card.devices().is_empty() && creating.is_empty() {
-            devices = devices.child(self.control_note("None yet."));
+            devices = devices.child(self.control_note(t!("None yet.")));
         } else if !card.devices().is_empty() {
-            devices = devices.child(self.control_note(
+            devices = devices.child(self.control_note(t!(
                 "Removing a device deletes it at Azure, with its disk and IP. Remove from Herdr \
-                 only, offered beside it, leaves it at Azure, still billing.",
-            ));
+                 only, offered beside it, leaves it at Azure, still billing."
+            )));
         }
         devices = devices.children(creating);
         for (index, device) in card.devices().iter().enumerate() {
             let noun = Machine::parse(&device.id).noun();
             let group = card.device_group(device);
             let detail = match card.device_size(&device.id) {
-                Some(size) => format!("{noun} · {size} in {group}"),
-                None => format!("{noun} in {group}"),
+                Some(size) => t!(
+                    "%{noun} · %{size} in %{group}",
+                    noun = t!(noun),
+                    size = size,
+                    group = group
+                )
+                .into_owned(),
+                None => t!("%{noun} in %{group}", noun = t!(noun), group = group).into_owned(),
             };
             let actions = self.azure_destroy_actions(
                 index,

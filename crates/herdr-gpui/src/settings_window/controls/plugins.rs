@@ -11,6 +11,7 @@ use crate::{
     },
     search_input::{Changed, SearchInput},
 };
+use rust_i18n::t;
 
 #[cfg(test)]
 #[allow(clippy::unwrap_used)]
@@ -37,7 +38,7 @@ impl Plugins {
     pub(in crate::settings_window) fn new(cx: &mut Context<SettingsWindow>) -> Self {
         let search = cx.new(SearchInput::new);
         search.update(cx, |input, cx| {
-            input.set_placeholder("Search plugin values...", cx)
+            input.set_placeholder(&t!("Search plugin values..."), cx)
         });
         let changed = cx.subscribe(&search, |this, _, _: &Changed, cx| {
             this.body_scroll.set_offset(Point::default());
@@ -67,12 +68,18 @@ fn scope_label(scope: SidebarScope) -> &'static str {
 
 fn detail(value: &SidebarValue) -> String {
     match &value.sample {
-        Some(sample) => format!(
-            "{} \u{b7} \u{201c}{sample}\u{201d} \u{b7} {}",
-            scope_label(value.scope),
-            value.hosts.join(", ")
-        ),
-        None => format!("{} \u{b7} not reported", scope_label(value.scope)),
+        Some(sample) => t!(
+            "%{scope} \u{b7} \u{201c}%{sample}\u{201d} \u{b7} %{hosts}",
+            scope = t!(scope_label(value.scope)),
+            sample = sample,
+            hosts = value.hosts.join(&t!(", "))
+        )
+        .into_owned(),
+        None => t!(
+            "%{scope} \u{b7} not reported",
+            scope = t!(scope_label(value.scope))
+        )
+        .into_owned(),
     }
 }
 
@@ -92,12 +99,12 @@ impl SettingsWindow {
             .child(self.plugins.search.clone());
         let Some(source) = self.source.upgrade() else {
             return body.child(self.control_note(
-                "Open a session window to see what your plugins report. Herdr UI settings remain available.",
+                t!("Open a session window to see what your plugins report. Herdr UI settings remain available."),
             ));
         };
         let reports = source.read(cx).plugin_reports();
         body.child(self.render_sidebar_values(&reports, &query, cx))
-            .child(self.control_note(LIMITS))
+            .child(self.control_note(t!(LIMITS)))
     }
 
     fn render_sidebar_values(
@@ -114,7 +121,7 @@ impl SettingsWindow {
             .find_map(|report| report.label_sample.as_deref());
         let mut card = self
             .control_card("Sidebar values")
-            .child(self.control_note(CONFIG_NOTE));
+            .child(self.control_note(t!(CONFIG_NOTE)));
         if !ready {
             card = card.child(self.control_note(if !cfg!(unix) {
                 "Herdr's settings are read-only on this platform."
@@ -137,14 +144,17 @@ impl SettingsWindow {
         if query.is_empty() || "status labels".contains(query) {
             let labelled: usize = reports.iter().map(|report| report.labelled_agents).sum();
             let detail = match label_sample {
-                Some(sample) => format!(
-                    "Agents \u{b7} {labelled} name their own status, such as \u{201c}{sample}\u{201d}"
-                ),
-                None => "Agents".to_owned(),
+                Some(sample) => t!(
+                    "Agents \u{b7} %{labelled} name their own status, such as \u{201c}%{sample}\u{201d}",
+                    labelled = labelled,
+                    sample = sample
+                )
+                .into_owned(),
+                None => t!("Agents").into_owned(),
             };
             let title = div()
                 .font_weight(FontWeight::SEMIBOLD)
-                .child("Status labels");
+                .child(t!("Status labels"));
             list = list.child(self.value_switch(
                 SidebarScope::Agents,
                 STATUS,
@@ -174,11 +184,11 @@ impl SettingsWindow {
             ));
         }
         if matched == 0 {
-            list = list.child(self.control_note(if values.is_empty() {
+            list = list.child(self.control_note(t!(if values.is_empty() {
                 "No plugin or hook reports custom values on a connected host yet."
             } else {
                 "No matching values."
-            }));
+            })));
         }
         let source = PreviewSource {
             values: &values,
@@ -270,12 +280,12 @@ impl SettingsWindow {
                 .flex_col()
                 .gap(px(4.))
                 .child(self.control_note(
-                    "This app draws its own sidebar rows ([usage] inline = false), so these switches only change the terminal app.",
+                    t!("This app draws its own sidebar rows ([usage] inline = false), so these switches only change the terminal app."),
                 ))
                 .child(
                     self.control_switch(
                         "plugin-use-herdr-rows",
-                        "Use Herdr's sidebar rows in this app",
+                        t!("Use Herdr's sidebar rows in this app"),
                         false,
                         true,
                     )
@@ -292,7 +302,7 @@ impl SettingsWindow {
             && layout.spaces == crate::config::SpaceLayout::default()
         {
             return div().debug_selector(|| "plugin-rows-default".into()).child(self.control_note(
-                "The sidebar uses this app's own rows while Herdr's are the defaults. Showing a value switches it to Herdr's configured rows, in your row style; the preview shows how they look.",
+                t!("The sidebar uses this app's own rows while Herdr's are the defaults. Showing a value switches it to Herdr's configured rows, in your row style; the preview shows how they look."),
             ));
         }
         div()
@@ -331,7 +341,7 @@ impl SettingsWindow {
             .border_color(rgb(theme.active))
             .text_font(font)
             .text_size(px(font.size))
-            .child(div().text_color(rgb(theme.muted)).child("Preview"))
+            .child(div().text_color(rgb(theme.muted)).child(t!("Preview")))
             .child(block(preview_space(&layout.spaces, source), false))
             .child(block(preview_agent(&layout.agents, source), true))
     }

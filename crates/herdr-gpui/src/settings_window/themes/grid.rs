@@ -1,5 +1,6 @@
 //! Virtual row geometry and bounded, single-flight thumbnail preparation.
 use super::*;
+use rust_i18n::t;
 use std::{collections::VecDeque, ops::Range};
 
 const CACHE_LIMIT: usize = 64;
@@ -193,11 +194,11 @@ impl SettingsWindow {
                 .bg(rgb(self.theme.surface))
                 .text_color(rgb(self.theme.subtext()))
                 .text_size(px(10.))
-                .child(if palette.is_some() {
+                .child(t!(if palette.is_some() {
                     "Unavailable"
                 } else {
                     "Loading..."
-                }),
+                })),
         }
     }
 }

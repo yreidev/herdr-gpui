@@ -7,6 +7,7 @@ use crate::{
     search_input::{Changed, SearchInput},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 mod appearance;
 mod grid;
 mod system;
@@ -358,7 +359,7 @@ impl SettingsWindow {
             return;
         }
         if !choice.scope.editable() {
-            self.status = Some("Herdr's themes are read-only on this platform. Choose This app or Follow Herdr instead.".into());
+            self.status = Some(t!("Herdr's themes are read-only on this platform. Choose This app or Follow Herdr instead.").into());
             cx.notify();
             return;
         }
@@ -453,7 +454,8 @@ impl SettingsWindow {
                                 this.theme_load_failed = true;
                                 this.closing = None;
                                 this.flushing = false;
-                                this.error = Some(format!("Load theme: {error}"));
+                                this.error =
+                                    Some(t!("Load theme: %{error}", error = error).into_owned());
                             }
                         }
                     }

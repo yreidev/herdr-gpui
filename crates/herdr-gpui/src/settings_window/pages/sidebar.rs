@@ -13,6 +13,7 @@ use crate::{
     sidebar::SidebarMetrics,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::ops::RangeInclusive;
 
 const TINT_HINT: &str = "Tints the host header, its workspaces, worktrees and agents.";
@@ -154,14 +155,14 @@ impl SettingsWindow {
             .flex_col()
             .child(ui::section(theme, "Layout", None))
             .child(
-                ui::row(theme, "sidebar-layout", "Layout preset")
+                ui::row(theme, "sidebar-layout", t!("Layout preset"))
                     .tag(ui::Source::HerdrUi)
-                    .description("Row shape and density; spacing below starts from the preset.")
+                    .description(t!("Row shape and density; spacing below starts from the preset."))
                     .control(self.layout_dropdown(ready, cx)),
             )
             .child(
-                ui::row(theme, "sidebar-select", "Selection marks")
-                    .description("What selecting a workspace highlights beyond its own row.")
+                ui::row(theme, "sidebar-select", t!("Selection marks"))
+                    .description(t!("What selecting a workspace highlights beyond its own row."))
                     .control(ui::segmented(
                         theme,
                         "sidebar-select-control",
@@ -180,10 +181,10 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "sidebar-device-footer", "Device footer")
+                ui::row(theme, "sidebar-device-footer", t!("Device footer"))
                     .description(
-                        "The device picker and its buttons. Auto shows it with two or more \
-                         devices.",
+                        t!("The device picker and its buttons. Auto shows it with two or more \
+                         devices."),
                     )
                     .control(ui::segmented(
                         theme,
@@ -203,8 +204,8 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "sidebar-show-agents", "Show agents")
-                    .description("List running agents in the sidebar.")
+                ui::row(theme, "sidebar-show-agents", t!("Show agents"))
+                    .description(t!("List running agents in the sidebar."))
                     .switch(
                         ui::toggle(
                             theme,
@@ -219,9 +220,9 @@ impl SettingsWindow {
                     ),
             )
             .child(
-                ui::row(theme, "sidebar-show-agents-header", "Show agents header")
+                ui::row(theme, "sidebar-show-agents-header", t!("Show agents header"))
                     .description(
-                        "The Agents title row with the sort toggle. Hidden, the order follows Herdr's ui.agent_panel_sort unless a plugin sets the agent view, which keeps the row.",
+                        t!("The Agents title row with the sort toggle. Hidden, the order follows Herdr's ui.agent_panel_sort unless a plugin sets the agent view, which keeps the row."),
                     )
                     .switch(self.preference_toggle(
                         "sidebar-show-agents-header-toggle",
@@ -231,10 +232,10 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "sidebar-agents-placement", "Agents placement")
+                ui::row(theme, "sidebar-agents-placement", t!("Agents placement"))
                     .description(
-                        "Their own section below the workspaces, or under the workspace each \
-                         one runs in.",
+                        t!("Their own section below the workspaces, or under the workspace each \
+                         one runs in."),
                     )
                     .control(ui::segmented(
                         theme,
@@ -251,8 +252,8 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "sidebar-show-search", "Show search")
-                    .description("The search field above the workspaces.")
+                ui::row(theme, "sidebar-show-search", t!("Show search"))
+                    .description(t!("The search field above the workspaces."))
                     .switch(self.preference_toggle(
                         "sidebar-show-search-toggle",
                         self.config.show_sidebar_search,
@@ -261,9 +262,9 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "sidebar-repository-icons", "Show repository icons")
+                ui::row(theme, "sidebar-repository-icons", t!("Show repository icons"))
                     .description(
-                        "The repository owner's avatar at the start of each workspace row.",
+                        t!("The repository owner's avatar at the start of each workspace row."),
                     )
                     .switch(self.preference_toggle(
                         "sidebar-repository-icons-toggle",
@@ -273,9 +274,9 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "sidebar-device-icons", "Show device icons")
+                ui::row(theme, "sidebar-device-icons", t!("Show device icons"))
                     .description(
-                        "A mark before each device's name: this machine, a cloud provider or SSH.",
+                        t!("A mark before each device's name: this machine, a cloud provider or SSH."),
                     )
                     .switch(self.preference_toggle(
                         "sidebar-device-icons-toggle",
@@ -304,7 +305,7 @@ impl SettingsWindow {
                     .py(px(6.))
                     .text_size(px(12.))
                     .text_color(rgb(theme.muted))
-                    .child("Connect to a host to give it a colour."),
+                    .child(t!("Connect to a host to give it a colour.")),
             );
         }
         let mut tinted = false;
@@ -394,8 +395,8 @@ impl SettingsWindow {
         let field = NumberField::Spacing(spacing);
         let value = spacing.value(&self.config);
         let view = cx.entity().downgrade();
-        ui::row(&self.theme, spacing.row(), spacing.title())
-            .description(spacing.description())
+        ui::row(&self.theme, spacing.row(), t!(spacing.title()))
+            .description(t!(spacing.description()))
             .control(ui::number(
                 &self.theme,
                 ui::Number {

@@ -5,6 +5,7 @@
 use super::{SettingsWindow, ui};
 use crate::launch_at_login::{self, State};
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// What the row knows of the startup entry.
 #[derive(Default)]
@@ -46,7 +47,7 @@ impl SettingsWindow {
                 this.launch_at_login.busy = false;
                 if let Err(error) = &saved {
                     tracing::warn!(%error, "Could not change launch at login");
-                    this.error = Some(format!("Launch at login: {error}"));
+                    this.error = Some(t!("Launch at login: %{error}", error = error).into_owned());
                 }
                 match state {
                     Ok(state) => this.launch_at_login.state = Some(state),
@@ -54,7 +55,8 @@ impl SettingsWindow {
                         this.launch_at_login.state = None;
                         tracing::warn!(%error, "Could not read launch at login");
                         if saved.is_ok() {
-                            this.error = Some(format!("Launch at login: {error}"));
+                            this.error =
+                                Some(t!("Launch at login: %{error}", error = error).into_owned());
                         }
                     }
                 }
@@ -69,11 +71,13 @@ impl SettingsWindow {
         let state = self.launch_at_login.state;
         let on = state == Some(State::On);
         let ready = !self.launch_at_login.busy && matches!(state, Some(State::On | State::Off));
-        let row = ui::row(theme, "general-launch-at-login", "Launch at login")
-            .description("Open Herdr UI when you sign in to Windows.");
+        let row = ui::row(theme, "general-launch-at-login", t!("Launch at login"))
+            .description(t!("Open Herdr UI when you sign in to Windows."));
         // Windows' own switch wins; the app never clears its mark.
         let row = if state == Some(State::DisabledByWindows) {
-            row.disabled("Turned off in Settings > Apps > Startup. Turn it back on there.")
+            row.disabled(t!(
+                "Turned off in Settings > Apps > Startup. Turn it back on there."
+            ))
         } else {
             row
         };

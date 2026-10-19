@@ -22,6 +22,7 @@ use crate::{
     search_input::SearchInput,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use secrecy::SecretString;
 
 /// The editable `[daytona]` keys, in display order, with their labels and hints.
@@ -269,11 +270,13 @@ impl SettingsWindow {
         });
         if let Some(card) = &mut self.daytona_card {
             card.message = Some(match started {
-                Ok(Ok(())) => {
-                    format!("Creating {name}. The device picker shows its progress.")
-                }
+                Ok(Ok(())) => t!(
+                    "Creating %{name}. The device picker shows its progress.",
+                    name = name
+                )
+                .into_owned(),
                 Ok(Err(error)) => error.to_string(),
-                Err(_) => "Open a main Herdr window to create a sandbox.".into(),
+                Err(_) => t!("Open a main Herdr window to create a sandbox.").into(),
             });
         }
         cx.notify();
@@ -298,19 +301,25 @@ impl SettingsWindow {
         let configured = self.daytona_settings().is_some();
         let (status, key) = match &card.account {
             _ if !configured => (
-                "Not configured. Check the API URL, add an API key, then save.".to_owned(),
+                t!("Not configured. Check the API URL, add an API key, then save.").into_owned(),
                 Key::Missing,
             ),
-            Account::Checking => ("Checking…".to_owned(), Key::Missing),
+            Account::Checking => (t!("Checking…").into_owned(), Key::Missing),
             Account::Known(overview) => (
                 match (&overview.key, &overview.sandboxes) {
-                    (Key::Missing, _) => "No API key saved.".to_owned(),
-                    (_, Some(Ok(count))) => format!(
-                        "Connected. The key sees {count} sandbox{}.",
-                        if *count == 1 { "" } else { "es" }
-                    ),
-                    (_, Some(Err(error))) => format!("The API key could not be used: {error}"),
-                    (_, None) => "Checking…".to_owned(),
+                    (Key::Missing, _) => t!("No API key saved.").into_owned(),
+                    (_, Some(Ok(count))) => {
+                        if *count == 1 {
+                            t!("Connected. The key sees 1 sandbox.").into_owned()
+                        } else {
+                            t!("Connected. The key sees %{count} sandboxes.", count = count)
+                                .into_owned()
+                        }
+                    }
+                    (_, Some(Err(error))) => {
+                        t!("The API key could not be used: %{error}", error = error).into_owned()
+                    }
+                    (_, None) => t!("Checking…").into_owned(),
                 },
                 overview.key,
             ),
@@ -326,7 +335,7 @@ impl SettingsWindow {
             .control_card("Daytona")
             .debug_selector(|| "cloud-daytona-card".into())
             .child(self.control_note(
-                "Create Daytona sandboxes and use them as devices. Herdr reaches each one through Daytona's SSH gateway with a short-lived token; the API key never leaves this computer.",
+                t!("Create Daytona sandboxes and use them as devices. Herdr reaches each one through Daytona's SSH gateway with a short-lived token; the API key never leaves this computer."),
             ))
             .child(div().min_w_0().child(status));
         for (index, (label, _)) in FIELDS.iter().enumerate() {
@@ -341,12 +350,12 @@ impl SettingsWindow {
                             .items_center()
                             .justify_between()
                             .gap(px(12.))
-                            .child(self.control_note(key_note))
+                            .child(self.control_note(t!(key_note)))
                             .when(key == Key::Saved, |row| {
                                 row.child(
                                     self.cloud_button(
                                         "cloud-daytona-forget-key",
-                                        "Forget key",
+                                        t!("Forget key"),
                                         ready,
                                     )
                                     .when(ready, |button| {
@@ -363,7 +372,7 @@ impl SettingsWindow {
         }
         account = account.child(
             div().flex().justify_end().child(
-                self.cloud_button("cloud-daytona-save", "Save", ready)
+                self.cloud_button("cloud-daytona-save", t!("Save"), ready)
                     .debug_selector(|| "cloud-daytona-save".into())
                     .when(ready, |button| {
                         button.on_click(cx.listener(|this, _, _, cx| this.save_daytona(cx)))
@@ -374,13 +383,13 @@ impl SettingsWindow {
         let mut sandboxes = self
             .control_card("New sandbox")
             .debug_selector(|| "cloud-daytona-new".into())
-            .child(self.control_note(
-                "Creates a sandbox with a generated name and adds it as a device once it is ready.",
-            ))
+            .child(self.control_note(t!(
+                "Creates a sandbox with a generated name and adds it as a device once it is ready."
+            )))
             .child(
                 self.control_switch(
                     "cloud-daytona-install",
-                    "Install Herdr in it when missing",
+                    t!("Install Herdr in it when missing"),
                     card.install,
                     ready,
                 )
@@ -406,7 +415,7 @@ impl SettingsWindow {
             ))
             .child(
                 div().flex().justify_end().child(
-                    self.cloud_button("cloud-daytona-create", "Create sandbox", create)
+                    self.cloud_button("cloud-daytona-create", t!("Create sandbox"), create)
                         .debug_selector(|| "cloud-daytona-create".into())
                         .when(create, |button| {
                             button.on_click(
@@ -422,7 +431,7 @@ impl SettingsWindow {
             .control_card("Daytona devices")
             .debug_selector(|| "cloud-daytona-devices".into());
         if card.devices().is_empty() {
-            devices = devices.child(self.control_note("None yet."));
+            devices = devices.child(self.control_note(t!("None yet.")));
         }
         for (index, device) in card.devices().iter().enumerate() {
             devices = devices.child(self.cloud_device_row(

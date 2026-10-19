@@ -33,6 +33,7 @@ use crate::{
     search_input::SearchInput,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// Open Settings > Cloud devices, on `provider`'s tab when the device picker's
 /// row sets that provider up, or on the first tab for its general row.
@@ -75,7 +76,7 @@ fn input(
     let input = cx.new(SearchInput::new);
     input.update(cx, |input, cx| {
         input.set_appearance(config.ui.clone(), theme.clone(), cx);
-        input.set_placeholder(placeholder, cx);
+        input.set_placeholder(&t!(placeholder), cx);
         if !text.is_empty() {
             input.set_text_selected(text, cx);
         }
@@ -236,8 +237,9 @@ impl SettingsWindow {
             .min_w_0()
             .child(super::search::track_bounds("cloud-accounts".into()))
             .when_some(crate::cloud::unavailable(), |section, reason| {
-                section.child(self.control_note(format!(
-                    "{reason} Accounts can still be edited here for other systems."
+                section.child(self.control_note(t!(
+                    "%{reason} Accounts can still be edited here for other systems.",
+                    reason = t!(reason)
                 )))
             })
             .child(self.render_cloud_setup(cx))
@@ -279,7 +281,7 @@ impl SettingsWindow {
             .flex_col()
             .gap(px(6.))
             .min_w_0()
-            .child(div().text_color(rgb(self.theme.muted)).child(label))
+            .child(div().text_color(rgb(self.theme.muted)).child(t!(label)))
             .child(input)
     }
 
@@ -326,7 +328,7 @@ impl SettingsWindow {
         let remove = self
             .cloud_button(
                 SharedString::from(format!("cloud-{key}-remove-{index}")),
-                "Remove",
+                t!("Remove"),
                 ready,
             )
             .debug_selector(move || format!("cloud-{key}-remove-{index}"))

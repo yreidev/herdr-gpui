@@ -8,6 +8,7 @@ use crate::config::{
     status_bar::{AwakeScope, Button, Detail, Edit},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 const DETAILS: [(Detail, &str); 2] = [(Detail::Detailed, "Detailed"), (Detail::Compact, "Compact")];
 const SCOPES: [(AwakeScope, &str); 2] = [
@@ -65,12 +66,12 @@ impl SettingsWindow {
             .flex_col()
             .child(ui::section(theme, "Items", Some(ui::Source::HerdrUi)))
             .child(
-                ui::row(theme, "status-usage", "Usage")
-                    .description(
+                ui::row(theme, "status-usage", t!("Usage"))
+                    .description(t!(
                         "Plan usage for signed-in AI services. Compact shows each service's \
                          tightest limit as one share; Detailed adds a meter and its two \
-                         tightest windows.",
-                    )
+                         tightest windows."
+                    ))
                     .control(self.detail_control(
                         "status-usage-detail",
                         items.usage,
@@ -87,8 +88,10 @@ impl SettingsWindow {
                     ),
             )
             .child(
-                ui::row(theme, "status-system-load", "CPU and memory")
-                    .description("Hiding CPU and memory also removes them from sidebar host rows.")
+                ui::row(theme, "status-system-load", t!("CPU and memory"))
+                    .description(t!(
+                        "Hiding CPU and memory also removes them from sidebar host rows."
+                    ))
                     .control(self.detail_control(
                         "status-system-load-detail",
                         items.system_load,
@@ -104,25 +107,29 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                ui::row(theme, "status-network-quality", "Network latency and loss")
-                    .description(
-                        "Times one TCP connect to 1.1.1.1:443 every 15 seconds from this \
-                         machine, about a megabyte a day.",
-                    )
-                    .switch(self.preference_toggle(
-                        "status-network-quality-toggle",
-                        network_quality,
-                        Preference::ShowNetworkQuality(!network_quality),
-                        cx,
-                    )),
+                ui::row(
+                    theme,
+                    "status-network-quality",
+                    t!("Network latency and loss"),
+                )
+                .description(t!(
+                    "Times one TCP connect to 1.1.1.1:443 every 15 seconds from this \
+                         machine, about a megabyte a day."
+                ))
+                .switch(self.preference_toggle(
+                    "status-network-quality-toggle",
+                    network_quality,
+                    Preference::ShowNetworkQuality(!network_quality),
+                    cx,
+                )),
             )
             .child(
-                ui::row(theme, "status-keep-awake", "Keep awake")
-                    .description(
+                ui::row(theme, "status-keep-awake", t!("Keep awake"))
+                    .description(t!(
                         "The cup keeps the machine from sleeping. System only lets the display \
                          sleep and lock, like caffeinate -i. A cup already on keeps its scope \
-                         until it is turned off and on again.",
-                    )
+                         until it is turned off and on again."
+                    ))
                     .control(ui::segmented(
                         theme,
                         "status-keep-awake-scope",
@@ -145,10 +152,10 @@ impl SettingsWindow {
             )
             .children(buttons.map(|button| self.button_row(button, cx)))
             .child(
-                self.control_note(
+                self.control_note(t!(
                     "Listening ports are under General. The version stays, since it says when \
-                     an update is ready.",
-                )
+                     an update is ready."
+                ))
                 .mt(px(10.))
                 .text_size(px(11.)),
             )
@@ -187,7 +194,7 @@ impl SettingsWindow {
         } = button;
         let shown = current.shown();
         let toggled = if shown { Button::Hidden } else { Button::Label };
-        ui::row(&self.theme, id, title)
+        ui::row(&self.theme, id, t!(title))
             .control(ui::segmented(
                 &self.theme,
                 style,

@@ -9,6 +9,7 @@ use crate::{
     },
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// The number control's id for a face; ids live for the whole run.
 pub(in crate::settings_window) const fn size_control(face: FontFace) -> &'static str {
@@ -43,7 +44,7 @@ impl SettingsWindow {
             page = page.child(self.face_row(face, label, cx));
         }
         page.child(
-            ui::row(theme, "fonts-all-row", "All faces").control(
+            ui::row(theme, "fonts-all-row", t!("All faces")).control(
                 self.all_families_button()
                     .on_click(cx.listener(|this, _, window, cx| {
                         this.open_control_font_picker(FontTarget::All, window, cx)
@@ -59,7 +60,7 @@ impl SettingsWindow {
     }
 
     fn all_families_button(&self) -> Stateful<Div> {
-        self.font_button("fonts-all".into(), "Use one family for all\u{2026}")
+        self.font_button("fonts-all".into(), t!("Use one family for all\u{2026}"))
             .border_1()
             .border_color(rgb(self.theme.active))
             .bg(rgb(self.theme.surface))
@@ -133,7 +134,7 @@ impl SettingsWindow {
                     .min_w_0()
                     .flex_1()
                     .truncate()
-                    .child(family_label(&face_font(&self.config, face).family).to_owned()),
+                    .child(family_label(&face_font(&self.config, face).family).into_owned()),
             )
             .child(
                 svg()

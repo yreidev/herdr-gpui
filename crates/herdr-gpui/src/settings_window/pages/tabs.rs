@@ -6,6 +6,7 @@ use crate::{
     settings_window::remote_history::HostState,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 impl SettingsWindow {
     pub(in crate::settings_window) fn render_tabs(&self, cx: &mut Context<Self>) -> Div {
@@ -20,7 +21,7 @@ impl SettingsWindow {
             .flex_col()
             .child(ui::section(theme, "Tab bar", Some(ui::Source::Herdr)))
             .child(
-                self.gate_shared(ui::row(theme, "tabs-position", "Position"))
+                self.gate_shared(ui::row(theme, "tabs-position", t!("Position")))
                     .control(ui::segmented(
                         theme,
                         "tabs-position-control",
@@ -36,44 +37,54 @@ impl SettingsWindow {
                     )),
             )
             .child(
-                self.gate_shared(ui::row(theme, "tabs-hide-single", "Hide with a single tab"))
-                    .switch(
-                        ui::toggle(theme, "tabs-hide-single-toggle", hide, ready).when(
-                            ready,
-                            |toggle| {
-                                toggle.on_click(cx.listener(move |this, _, _, cx| {
-                                    this.save_shared(Edit::HideSingleTabBar(!hide), cx)
-                                }))
-                            },
-                        ),
+                self.gate_shared(ui::row(
+                    theme,
+                    "tabs-hide-single",
+                    t!("Hide with a single tab"),
+                ))
+                .switch(
+                    ui::toggle(theme, "tabs-hide-single-toggle", hide, ready).when(
+                        ready,
+                        |toggle| {
+                            toggle.on_click(cx.listener(move |this, _, _, cx| {
+                                this.save_shared(Edit::HideSingleTabBar(!hide), cx)
+                            }))
+                        },
                     ),
+                ),
             )
             .child(ui::section(theme, "Closing", None))
             .child(
-                ui::row(theme, "tabs-confirm-tab", "Confirm before closing a tab").switch(
-                    self.preference_toggle(
-                        "tabs-confirm-tab-toggle",
-                        self.config.confirm_close_tab,
-                        Preference::ConfirmCloseTab(!self.config.confirm_close_tab),
-                        cx,
-                    ),
-                ),
+                ui::row(
+                    theme,
+                    "tabs-confirm-tab",
+                    t!("Confirm before closing a tab"),
+                )
+                .switch(self.preference_toggle(
+                    "tabs-confirm-tab-toggle",
+                    self.config.confirm_close_tab,
+                    Preference::ConfirmCloseTab(!self.config.confirm_close_tab),
+                    cx,
+                )),
             )
             .child(
-                ui::row(theme, "tabs-confirm-pane", "Confirm before closing a pane").switch(
-                    self.preference_toggle(
-                        "tabs-confirm-pane-toggle",
-                        self.config.confirm_close_pane,
-                        Preference::ConfirmClosePane(!self.config.confirm_close_pane),
-                        cx,
-                    ),
-                ),
+                ui::row(
+                    theme,
+                    "tabs-confirm-pane",
+                    t!("Confirm before closing a pane"),
+                )
+                .switch(self.preference_toggle(
+                    "tabs-confirm-pane-toggle",
+                    self.config.confirm_close_pane,
+                    Preference::ConfirmClosePane(!self.config.confirm_close_pane),
+                    cx,
+                )),
             )
             .child(
                 ui::row(
                     theme,
                     "tabs-confirm-workspace",
-                    "Confirm before closing a workspace",
+                    t!("Confirm before closing a workspace"),
                 )
                 .switch(self.preference_toggle(
                     "tabs-confirm-workspace-toggle",
@@ -84,8 +95,10 @@ impl SettingsWindow {
             )
             .child(ui::section(theme, "Panes", None))
             .child(
-                ui::row(theme, "tabs-focus-follows-mouse", "Focus follows mouse")
-                    .description("The pointer chooses the active pane within a split terminal tab.")
+                ui::row(theme, "tabs-focus-follows-mouse", t!("Focus follows mouse"))
+                    .description(t!(
+                        "The pointer chooses the active pane within a split terminal tab."
+                    ))
                     .switch(self.preference_toggle(
                         "tabs-focus-follows-mouse-toggle",
                         self.config.focus_follows_mouse,
@@ -99,13 +112,13 @@ impl SettingsWindow {
                     ui::row(
                         theme,
                         "tabs-pane-history",
-                        "Restore scrollback after Herdr restarts",
+                        t!("Restore scrollback after Herdr restarts"),
                     )
                     .tag(ui::Source::Herdr)
-                    .description(
+                    .description(t!(
                         "Experimental. Herdr saves pane output to session-history.json and \
-                         replays it when the daemon restarts.",
-                    ),
+                         replays it when the daemon restarts."
+                    )),
                 )
                 .switch(
                     ui::toggle(theme, "tabs-pane-history-toggle", history, ready).when(
@@ -128,12 +141,14 @@ impl SettingsWindow {
             let enabled = open && settled;
             let target = host.target.clone();
             let note = match &host.state {
-                HostState::Loading => "Reading host config\u{2026}".to_owned(),
-                HostState::Saving(_) => "Saving host config\u{2026}".to_owned(),
-                HostState::Failed(error) => {
-                    format!("{error}. Reload configuration to try again.")
-                }
-                HostState::Ready(_) => "Each SSH host keeps its own setting.".to_owned(),
+                HostState::Loading => t!("Reading host config\u{2026}").into_owned(),
+                HostState::Saving(_) => t!("Saving host config\u{2026}").into_owned(),
+                HostState::Failed(error) => t!(
+                    "%{error}. Reload configuration to try again.",
+                    error = error
+                )
+                .into_owned(),
+                HostState::Ready(_) => t!("Each SSH host keeps its own setting.").into_owned(),
             };
             let id = format!("tabs-pane-history-host-{index}");
             page = page.child(

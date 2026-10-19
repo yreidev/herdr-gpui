@@ -17,6 +17,7 @@ use crate::{
     progress::{self, Progress},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 pub(super) enum Update {
     Stage(Stage),
@@ -142,7 +143,14 @@ impl SettingsWindow {
                 card.destroying = None;
                 card.outcome = Some(match result {
                     Ok(()) => Outcome::Destroyed(label),
-                    Err(error) => Outcome::Failed(format!("Could not delete {label}: {error}")),
+                    Err(error) => Outcome::Failed(
+                        t!(
+                            "Could not delete %{label}: %{error}",
+                            label = label,
+                            error = error
+                        )
+                        .into_owned(),
+                    ),
                 });
                 self.refresh_azure(cx);
             }
@@ -170,7 +178,7 @@ impl SettingsWindow {
             return vec![
                 self.cloud_button(
                     SharedString::from(format!("cloud-azure-remove-{index}")),
-                    "Remove from Herdr only",
+                    t!("Remove from Herdr only"),
                     ready,
                 )
                 .debug_selector(move || format!("cloud-azure-remove-{index}"))
@@ -183,7 +191,7 @@ impl SettingsWindow {
                 .into_any_element(),
                 self.cloud_button(
                     SharedString::from(format!("cloud-azure-destroy-cancel-{index}")),
-                    "Cancel",
+                    t!("Cancel"),
                     true,
                 )
                 .debug_selector(move || format!("cloud-azure-destroy-cancel-{index}"))
@@ -191,7 +199,7 @@ impl SettingsWindow {
                 .into_any_element(),
                 self.cloud_button(
                     SharedString::from(format!("cloud-azure-destroy-confirm-{index}")),
-                    format!("Delete {noun}"),
+                    t!("Delete %{noun}", noun = t!(noun)).into_owned(),
                     enabled,
                 )
                 .text_color(danger)
@@ -208,7 +216,7 @@ impl SettingsWindow {
         vec![
             self.cloud_button(
                 SharedString::from(format!("cloud-azure-destroy-{index}")),
-                "Remove…",
+                t!("Remove…"),
                 enabled,
             )
             .text_color(danger)
@@ -228,14 +236,16 @@ impl SettingsWindow {
         let card = self.azure_card.as_ref()?;
         if card.confirm_destroy.as_deref() == Some(&device.id) {
             let what = match Machine::parse(&device.id) {
-                Machine::Vm(name) => {
-                    format!("the VM {name} with its disk, public IP, and network")
+                Machine::Vm(name) => t!(
+                    "the VM %{name} with its disk, public IP, and network",
+                    name = name
+                )
+                .into_owned(),
+                Machine::Sandbox(_) => {
+                    t!("the sandbox %{label}", label = device.label).into_owned()
                 }
-                Machine::Sandbox(_) => format!("the sandbox {}", device.label),
             };
-            return Some(div().child(self.control_note(format!(
-                "Delete removes {what} at Azure as well as here. Its files are not kept, and this cannot be undone. Remove from Herdr only leaves it at Azure, still billing."
-            ))));
+            return Some(div().child(self.control_note(t!("Delete removes %{what} at Azure as well as here. Its files are not kept, and this cannot be undone. Remove from Herdr only leaves it at Azure, still billing.", what = what).into_owned())));
         }
         let job = card.destroying.as_ref().filter(|job| job.id == device.id)?;
         let (text, progress) = status(job.stage);
@@ -256,7 +266,7 @@ impl SettingsWindow {
                     div()
                         .truncate()
                         .text_color(rgb(self.theme.muted))
-                        .child(text),
+                        .child(t!(text)),
                 ),
         )
     }
@@ -273,7 +283,7 @@ impl SettingsWindow {
         Some(match outcome {
             Outcome::Destroyed(label) => div()
                 .debug_selector(|| "cloud-azure-destroyed".into())
-                .child(format!("Deleted {label}.")),
+                .child(t!("Deleted %{label}.", label = label).into_owned()),
             Outcome::Failed(message) => div()
                 .debug_selector(|| "cloud-azure-destroy-failed".into())
                 .text_color(crate::menu::danger(&self.theme))

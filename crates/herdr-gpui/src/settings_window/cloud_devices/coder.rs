@@ -24,6 +24,7 @@ use crate::{
     search_input::SearchInput,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use secrecy::SecretString;
 
 const SECRET_VARIABLE: &str = "HERDR_CODER_OAUTH_CLIENT_SECRET";
@@ -216,7 +217,7 @@ impl SettingsWindow {
                 cloud.message = Some(error.to_string());
             }
             Update::Opened(url) => {
-                cloud.message = Some("Finish signing in in your browser…".into());
+                cloud.message = Some(t!("Finish signing in in your browser…").into());
                 cx.open_url(&url);
             }
             Update::SignedIn(result) | Update::Done(result) => {
@@ -317,34 +318,40 @@ impl SettingsWindow {
         let configured = self.coder_settings().is_some();
         let (account, action) = match &cloud.account {
             _ if !configured => (
-                "Not configured. Enter the deployment and its OAuth app, then save.".to_owned(),
+                t!("Not configured. Enter the deployment and its OAuth app, then save.")
+                    .into_owned(),
                 None,
             ),
-            Account::Checking => ("Checking…".to_owned(), None),
-            Account::SigningIn => ("Waiting for the browser…".to_owned(), None),
-            Account::Known(Session::SignedOut) => ("Not signed in".to_owned(), Some(true)),
-            Account::Known(Session::SignedIn { user }) => {
-                (format!("Signed in as {user}"), Some(false))
-            }
+            Account::Checking => (t!("Checking…").into_owned(), None),
+            Account::SigningIn => (t!("Waiting for the browser…").into_owned(), None),
+            Account::Known(Session::SignedOut) => (t!("Not signed in").into_owned(), Some(true)),
+            Account::Known(Session::SignedIn { user }) => (
+                t!("Signed in as %{user}", user = user).into_owned(),
+                Some(false),
+            ),
             Account::Known(Session::Unreadable { reason }) => (
-                format!("Signed in; the account could not be read: {reason}"),
+                t!(
+                    "Signed in; the account could not be read: %{reason}",
+                    reason = reason
+                )
+                .into_owned(),
                 Some(false),
             ),
         };
         let secret_note = configured_secret(&self.config.coder)
-            .map(str::to_owned)
+            .map(|note| t!(note).into_owned())
             .unwrap_or_else(|| {
                 if cloud.secret_saved {
-                    "Saved. Type a new secret to replace it.".into()
+                    t!("Saved. Type a new secret to replace it.").into()
                 } else {
-                    "Not saved yet. Coder requires it to sign in.".into()
+                    t!("Not saved yet. Coder requires it to sign in.").into()
                 }
             });
         let mut card = self
             .control_card("Coder")
             .debug_selector(|| "cloud-coder-card".into())
             .child(self.control_note(
-                "Create Coder workspaces from the device picker and use them as devices. Register an OAuth2 app in Coder with the redirect URI below; the deployment must enable the oauth2 experiment.",
+                t!("Create Coder workspaces from the device picker and use them as devices. Register an OAuth2 app in Coder with the redirect URI below; the deployment must enable the oauth2 experiment."),
             ))
             .child(
                 div()
@@ -358,13 +365,13 @@ impl SettingsWindow {
                         // Only a settled account line offers an action.
                         let enabled = ready && matches!(cloud.account, Account::Known(_));
                         row.child(if sign_in {
-                            self.cloud_button("cloud-coder-sign-in", "Sign in", enabled)
+                            self.cloud_button("cloud-coder-sign-in", t!("Sign in"), enabled)
                                 .debug_selector(|| "cloud-coder-sign-in".into())
                                 .when(enabled, |button| {
                                     button.on_click(cx.listener(|this, _, _, cx| this.cloud_sign_in(cx)))
                                 })
                         } else {
-                            self.cloud_button("cloud-coder-sign-out", "Sign out", enabled)
+                            self.cloud_button("cloud-coder-sign-out", t!("Sign out"), enabled)
                                 .debug_selector(|| "cloud-coder-sign-out".into())
                                 .when(enabled, |button| {
                                     button.on_click(cx.listener(|this, _, _, cx| this.cloud_sign_out(cx)))
@@ -389,7 +396,7 @@ impl SettingsWindow {
                                 row.child(
                                     self.cloud_button(
                                         "cloud-coder-clear-secret",
-                                        "Forget secret",
+                                        t!("Forget secret"),
                                         ready,
                                     )
                                     .when(ready, |button| {
@@ -406,7 +413,7 @@ impl SettingsWindow {
         }
         card = card.child(
             div().flex().justify_end().child(
-                self.cloud_button("cloud-coder-save", "Save", ready)
+                self.cloud_button("cloud-coder-save", t!("Save"), ready)
                     .debug_selector(|| "cloud-coder-save".into())
                     .when(ready, |button| {
                         button.on_click(cx.listener(|this, _, _, cx| this.save_cloud(cx)))
@@ -424,11 +431,11 @@ impl SettingsWindow {
             .control_card("Coder devices")
             .debug_selector(|| "cloud-coder-devices".into());
         if cloud.devices.is_empty() {
-            devices =
-                devices.child(self.control_note("None yet. Add one from Coder in Add Device…."));
+            devices = devices
+                .child(self.control_note(t!("None yet. Add one from Coder in Add Device….")));
         } else {
             devices = devices.child(self.control_note(
-                "Remove takes a device off this list and leaves its workspace running in Coder. Destroy deletes the workspace at Coder.",
+                t!("Remove takes a device off this list and leaves its workspace running in Coder. Destroy deletes the workspace at Coder."),
             ));
         }
         if let Some(outcome) = self.coder_destroy_outcome() {

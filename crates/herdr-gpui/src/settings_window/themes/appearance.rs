@@ -6,6 +6,8 @@ use crate::{
     settings_window::ui,
 };
 use gpui::{Context, Div, ScrollStrategy, Window, div, prelude::*, px, rgb, uniform_list};
+use rust_i18n::t;
+use std::borrow::Cow;
 
 impl SettingsWindow {
     pub(in crate::settings_window) fn render_theme_search(&self, cx: &mut Context<Self>) -> Div {
@@ -36,7 +38,8 @@ impl SettingsWindow {
         let theme = &self.theme;
         let count = usize::from(browser.ghostty_enabled) * browser.names.len()
             + usize::from(browser.herdr_enabled) * herdr_settings::THEME_NAMES.len();
-        let button = |id: &'static str, label: String| ui::button(theme, id, label, true);
+        let button =
+            |id: &'static str, label: Cow<'static, str>| ui::button(theme, id, label, true);
         div()
             .flex()
             .flex_col()
@@ -46,16 +49,19 @@ impl SettingsWindow {
                     .debug_selector(|| "settings-theme-count".into())
                     .text_size(px(11.))
                     .text_color(rgb(theme.subtext()))
-                    .child(format!(
-                        "{} of {} themes{}",
-                        browser.filtered.len(),
-                        count,
-                        if browser.discovering {
-                            " / discovering installed themes..."
-                        } else {
-                            ""
-                        }
-                    )),
+                    .child(if browser.discovering {
+                        t!(
+                            "%{shown} of %{total} themes / discovering installed themes\u{2026}",
+                            shown = browser.filtered.len(),
+                            total = count
+                        )
+                    } else {
+                        t!(
+                            "%{shown} of %{total} themes",
+                            shown = browser.filtered.len(),
+                            total = count
+                        )
+                    }),
             )
             .child(
                 div()
@@ -80,7 +86,7 @@ impl SettingsWindow {
                             div()
                                 .debug_selector(|| "settings-theme-empty".into())
                                 .p(px(12.))
-                                .child("No matching themes. Try a shorter search."),
+                                .child(t!("No matching themes. Try a shorter search.")),
                         )
                     })
                     .when(!browser.filtered.is_empty(), |el| {
@@ -182,7 +188,7 @@ impl SettingsWindow {
                                                         .text_size(px(10.))
                                                         .text_color(rgb(this.theme.subtext()))
                                                         .truncate()
-                                                        .child(format!("{source}{}", if draft { " / Draft" } else if saved { " / Saved" } else { "" })),
+                                                        .child(if draft { t!("%{source} / Draft", source = t!(source)) } else if saved { t!("%{source} / Saved", source = t!(source)) } else { t!(source) }),
                                                 )
                                                 .on_click(cx.listener(
                                                     move |this, _, window, cx| {
@@ -210,11 +216,12 @@ impl SettingsWindow {
                 el.child(
                     div()
                         .debug_selector(|| "settings-theme-catalog-error".into())
-                        .child(format!(
-                            "Catalog discovery failed: {error}. Built-ins remain available."
+                        .child(t!(
+                            "Catalog discovery failed: %{error}. Built-ins remain available.",
+                            error = error
                         ))
                         .child(
-                            button("theme-retry-catalog", "Retry discovery".into())
+                            button("theme-retry-catalog", t!("Retry discovery"))
                                 .on_click(
                                     cx.listener(|this, _, _, cx| this.discover_settings_themes(cx)),
                                 ),
@@ -225,11 +232,12 @@ impl SettingsWindow {
                 el.child(
                     div()
                         .debug_selector(|| "settings-theme-preview-error".into())
-                        .child(format!(
-                            "Preview unavailable: {error}. Keeping the last valid preview."
+                        .child(t!(
+                            "Preview unavailable: %{error}. Keeping the last valid preview.",
+                            error = error
                         ))
                         .child(
-                            button("theme-retry-preview", "Retry preview".into()).on_click(
+                            button("theme-retry-preview", t!("Retry preview")).on_click(
                                 cx.listener(|this, _, _, cx| this.request_theme_preview(cx)),
                             ),
                         ),

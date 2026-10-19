@@ -9,6 +9,7 @@ use crate::{
 };
 use gpui::{prelude::*, *};
 use herdr_client::protocol::AgentStatus;
+use rust_i18n::t;
 
 /// The statuses each card previews, most urgent first, with their names.
 const PREVIEW: [(AgentStatus, &str); 5] = [
@@ -39,12 +40,12 @@ impl SettingsWindow {
             .flex()
             .flex_col()
             .child(
-                ui::row(theme, "indicators-edge-rail", "Edge rail")
+                ui::row(theme, "indicators-edge-rail", t!("Edge rail"))
                     .tag(ui::Source::HerdrUi)
-                    .description(
+                    .description(t!(
                         "A bar on the leading edge of each working, blocked, or done row, \
-                         whichever icons you pick.",
-                    )
+                         whichever icons you pick."
+                    ))
                     .switch(self.preference_toggle(
                         "indicators-edge-rail-toggle",
                         rail,
@@ -108,7 +109,7 @@ impl SettingsWindow {
                     .justify_between()
                     .text_color(rgb(theme.foreground))
                     .font_weight(FontWeight::SEMIBOLD)
-                    .child(set_label(set))
+                    .child(t!(set_label(set)))
                     .child(radio(theme, on)),
             )
             .child(
@@ -130,7 +131,7 @@ impl SettingsWindow {
                                 div()
                                     .text_size(px(9.5))
                                     .text_color(rgb(theme.muted))
-                                    .child(name),
+                                    .child(t!(name)),
                             )
                     })),
             )
@@ -138,7 +139,7 @@ impl SettingsWindow {
                 div()
                     .text_size(px(11.5))
                     .text_color(rgb(theme.subtext()))
-                    .child(set_description(set)),
+                    .child(t!(set_description(set))),
             )
     }
 }

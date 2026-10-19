@@ -14,6 +14,7 @@ use crate::azure::{
 };
 use crate::config::Config;
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// A choice's own width; choices wrap into columns as the window allows.
 const CHOICE_WIDTH: f32 = 280.;
@@ -23,7 +24,7 @@ const CHOICE_WIDTH: f32 = 280.;
 pub(super) fn vm_detail(catalog: Option<&Catalog>, size: &str) -> Vec<String> {
     let disk = ephemeral_placement(size)
         .is_none()
-        .then(|| "No local storage: a Standard SSD disk, billed until deleted".to_owned());
+        .then(|| t!("No local storage: a Standard SSD disk, billed until deleted").into_owned());
     let mut lines = vm_lines(catalog, size);
     lines.extend(disk);
     lines
@@ -34,16 +35,21 @@ fn vm_lines(catalog: Option<&Catalog>, size: &str) -> Vec<String> {
         return vec![if is_arm(size) { "Arm" } else { "x64" }.to_owned()];
     };
     let Some(spec) = catalog.vms.get(size) else {
-        return vec![format!("Not offered in {}", catalog.location)];
+        return vec![t!("Not offered in %{location}", location = catalog.location).into_owned()];
     };
     let price = match (catalog.spot_prices.get(size), catalog.vm_prices.get(size)) {
-        (Some(spot), Some(regular)) => Some(format!(
-            "Spot {} · regular {}",
-            spot.text(true),
-            regular.text(false)
-        )),
-        (Some(spot), None) => Some(format!("Spot {}", spot.text(true))),
-        (None, Some(regular)) => Some(format!("Regular {}", regular.text(true))),
+        (Some(spot), Some(regular)) => Some(
+            t!(
+                "Spot %{spot} · regular %{regular}",
+                spot = spot.text(true),
+                regular = regular.text(false)
+            )
+            .into_owned(),
+        ),
+        (Some(spot), None) => Some(t!("Spot %{spot}", spot = spot.text(true)).into_owned()),
+        (None, Some(regular)) => {
+            Some(t!("Regular %{regular}", regular = regular.text(true)).into_owned())
+        }
         (None, None) => None,
     };
     std::iter::once(spec.summary(size)).chain(price).collect()
@@ -55,11 +61,12 @@ fn sandbox_detail(catalog: Option<&Catalog>, size: SandboxSize) -> Vec<String> {
 
 fn sandbox_line(catalog: Option<&Catalog>, size: SandboxSize) -> String {
     match catalog.and_then(|catalog| catalog.sandbox_rates) {
-        Some(rates) => format!(
-            "{} · {} while running",
-            size.summary(),
-            rates.hourly(size).text(false)
-        ),
+        Some(rates) => t!(
+            "%{summary} · %{rate} while running",
+            summary = size.summary(),
+            rate = rates.hourly(size).text(false)
+        )
+        .into_owned(),
         None => size.summary(),
     }
 }
@@ -148,19 +155,22 @@ impl SettingsWindow {
         };
         let other = card.vm_other || !VM_CHOICES.contains(&vm_size.as_str());
         let note = match catalog {
-            Some(catalog) => format!(
+            Some(catalog) => t!(
                 "New VMs keep their OS disk on the VM's local storage, so there is no disk to \
                  pay for, and auto-stop deletes an idle one: keep work in Git. They run as Spot \
                  where Azure offers it to the subscription, and Azure may delete a Spot VM when \
                  it needs the capacity back; otherwise they are billed at the regular price. \
-                 Linux list prices in {}, in US dollars, as of now: Spot prices move.",
-                catalog.location
-            ),
-            None => "Specs and prices show once the account is saved and reachable.".to_owned(),
+                 Linux list prices in %{location}, in US dollars, as of now: Spot prices move.",
+                location = catalog.location
+            )
+            .into_owned(),
+            None => {
+                t!("Specs and prices show once the account is saved and reachable.").into_owned()
+            }
         };
         let choices = VM_CHOICES.iter().map(|&size| {
             let title = if size == DEFAULT_VM_SIZE {
-                format!("{size} (default)")
+                t!("%{size} (default)", size = size).into_owned()
             } else {
                 size.to_owned()
             };
@@ -180,8 +190,8 @@ impl SettingsWindow {
         let other_choice = self
             .size_choice(
                 "cloud-azure-vm-size-other".into(),
-                "Other".into(),
-                vec!["Any size the region offers".into()],
+                t!("Other").into(),
+                vec![t!("Any size the region offers").into()],
                 other,
                 ready,
             )
@@ -213,14 +223,16 @@ impl SettingsWindow {
                             .min_w_0()
                             .child(div().flex_1().min_w_0().child(card.fields[VM_SIZE].clone()))
                             .child(
-                                self.cloud_button("cloud-azure-vm-size-save", "Use size", ready)
-                                    .when(ready, |button| {
-                                        button.on_click(
-                                            cx.listener(|this, _, _, cx| {
-                                                this.save_typed_vm_size(cx)
-                                            }),
-                                        )
-                                    }),
+                                self.cloud_button(
+                                    "cloud-azure-vm-size-save",
+                                    t!("Use size"),
+                                    ready,
+                                )
+                                .when(ready, |button| {
+                                    button.on_click(
+                                        cx.listener(|this, _, _, cx| this.save_typed_vm_size(cx)),
+                                    )
+                                }),
                             ),
                     )
                     .children(
@@ -237,19 +249,16 @@ impl SettingsWindow {
         let chosen = SandboxSize::parse(&card.sandbox_cpu)
             .unwrap_or_else(|| SandboxSize::standard(DEFAULT_SANDBOX_MILLICORES));
         let note = match catalog {
-            Some(catalog) if catalog.sandbox_rates.is_some() => format!(
-                "Billed per second at Container Apps rates in {} while running; a suspended \
-                 sandbox is not billed for CPU or memory.",
-                catalog.sandbox_location
-            ),
-            _ => "Memory is 2 GiB and disk 20 GiB per vCPU.".to_owned(),
+            Some(catalog) if catalog.sandbox_rates.is_some() => t!("Billed per second at Container Apps rates in %{sandbox_location} while running; a suspended \
+                 sandbox is not billed for CPU or memory.", sandbox_location = catalog.sandbox_location).into_owned(),
+            _ => t!("Memory is 2 GiB and disk 20 GiB per vCPU.").into_owned(),
         };
         let choices = SANDBOX_MILLICORES.iter().map(|&millicores| {
             let size = SandboxSize::standard(millicores);
             let title = if millicores == DEFAULT_SANDBOX_MILLICORES {
-                format!("{} vCPU (default)", size.cores())
+                t!("%{cores} vCPU (default)", cores = size.cores()).into_owned()
             } else {
-                format!("{} vCPU", size.cores())
+                t!("%{cores} vCPU", cores = size.cores()).into_owned()
             };
             self.size_choice(
                 SharedString::from(format!("cloud-azure-sandbox-size-{millicores}")),

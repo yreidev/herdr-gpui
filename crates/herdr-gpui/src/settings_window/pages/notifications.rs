@@ -6,6 +6,7 @@ use crate::{
     herdr_settings::{Edit, ToastDelivery},
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 impl SettingsWindow {
     pub(in crate::settings_window) fn render_notifications(&self, cx: &mut Context<Self>) -> Div {
@@ -35,10 +36,11 @@ impl SettingsWindow {
             .child(ui::section(theme, "Delivery", Some(ui::Source::Herdr)))
             .child(
                 self.gate_shared(
-                    ui::row(theme, "notif-delivery", "Deliver agent notifications").description(
-                        "Herdr shows them in-app. System uses OS notifications; clicking one \
-                         opens its pane. Terminal is for other clients only.",
-                    ),
+                    ui::row(theme, "notif-delivery", t!("Deliver agent notifications"))
+                        .description(t!(
+                            "Herdr shows them in-app. System uses OS notifications; clicking one \
+                         opens its pane. Terminal is for other clients only."
+                        )),
                 )
                 .control(ui::segmented(
                     theme,
@@ -57,12 +59,12 @@ impl SettingsWindow {
                 )),
             )
             .child(
-                ui::row(theme, "notif-finished", "Finished notifications")
+                ui::row(theme, "notif-finished", t!("Finished notifications"))
                     .tag(ui::Source::HerdrUi)
-                    .description(
+                    .description(t!(
                         "Off drops the notice at the end of each agent turn, in-app and from \
-                         the system; \u{201c}needs attention\u{201d} still shows.",
-                    )
+                         the system; \u{201c}needs attention\u{201d} still shows."
+                    ))
                     .switch(self.preference_toggle(
                         "notif-finished-toggle",
                         finished,
@@ -76,7 +78,7 @@ impl SettingsWindow {
                 Some(ui::Source::HerdrUi),
             ))
             .child(
-                ui::row(theme, "notif-show", "Show toasts").control(self.override_dropdown(
+                ui::row(theme, "notif-show", t!("Show toasts")).control(self.override_dropdown(
                     DropdownField::ToastEnabled,
                     on_off(shared_enabled),
                     &["On", "Off"],
@@ -86,11 +88,11 @@ impl SettingsWindow {
             )
             .child(self.delay_row(cx))
             .child(
-                ui::row(theme, "notif-position", "Position")
-                    .description(
+                ui::row(theme, "notif-position", t!("Position"))
+                    .description(t!(
                         "Controls show effective values; a managed-file override still \
-                         takes precedence.",
-                    )
+                         takes precedence."
+                    ))
                     .control(self.override_dropdown(
                         DropdownField::ToastPosition,
                         base_position,
@@ -102,19 +104,19 @@ impl SettingsWindow {
             .child(ui::section(theme, "Sound", None))
             .child(
                 self.gate_shared(
-                    ui::row(theme, "notif-sound", "Play agent sounds")
+                    ui::row(theme, "notif-sound", t!("Play agent sounds"))
                         .tag(ui::Source::Herdr)
-                        .description(if source_alive {
+                        .description(t!(if source_alive {
                             "Uses Herdr's sound paths and per-agent overrides. Missing custom \
                              sounds fall back to bundled sounds."
                         } else {
                             "Uses Herdr's sound paths and per-agent overrides. Missing custom \
                              sounds fall back to bundled sounds. Open a main Herdr window to \
                              preview audio."
-                        }),
+                        })),
                 )
                 .control(
-                    ui::button(theme, "notif-sound-test", "Test", source_alive).when(
+                    ui::button(theme, "notif-sound-test", t!("Test"), source_alive).when(
                         source_alive,
                         |button| {
                             button.on_click(cx.listener(|this, _, _, cx| {
@@ -145,11 +147,11 @@ impl SettingsWindow {
         });
         let value = self.config.notifications.delay_seconds as f32;
         let view = cx.entity().downgrade();
-        ui::row(&self.theme, "notif-delay", "Delay")
-            .description(
+        ui::row(&self.theme, "notif-delay", t!("Delay"))
+            .description(t!(
                 "Wait before a toast appears, so quick turns stay quiet. Controls show \
-                 effective values; a managed-file override still takes precedence.",
-            )
+                 effective values; a managed-file override still takes precedence."
+            ))
             .control(ui::number(
                 &self.theme,
                 ui::Number {
@@ -170,7 +172,7 @@ impl SettingsWindow {
             ))
             .when(overridden, |row| {
                 row.control(
-                    ui::button(&self.theme, "notif-delay-reset", "Reset", true).on_click(
+                    ui::button(&self.theme, "notif-delay-reset", t!("Reset"), true).on_click(
                         cx.listener(|this, _, _, cx| {
                             this.save_preference(Preference::NotificationDelay(None), cx)
                         }),
@@ -191,9 +193,11 @@ impl SettingsWindow {
             f32::from(self.config.sound.volume),
         );
         let view = cx.entity().downgrade();
-        ui::row(&self.theme, "notif-volume", "Volume")
+        ui::row(&self.theme, "notif-volume", t!("Volume"))
             .tag(ui::Source::HerdrUi)
-            .description("Sounds and Test play at this level, even when sounds are off.")
+            .description(t!(
+                "Sounds and Test play at this level, even when sounds are off."
+            ))
             .control(ui::number(
                 &self.theme,
                 ui::Number {

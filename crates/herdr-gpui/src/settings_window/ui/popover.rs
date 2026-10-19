@@ -6,6 +6,7 @@ use crate::{
     settings_window::inputs::DropdownField,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 use std::{cell::RefCell, collections::HashSet, rc::Rc};
 
 thread_local! {
@@ -78,8 +79,9 @@ pub(in crate::settings_window) fn dropdown(
     let on_dismiss = Rc::new(on_dismiss);
     let dismiss_button = on_dismiss.clone();
     let dismiss_list = on_dismiss;
-    let prefix = "Use Herdr setting · ";
-    let label_el = match label.strip_prefix(prefix).filter(|_| shared_prefix) {
+    // Every language puts the value last, so this is the label's lead.
+    let prefix = t!("Use Herdr setting \u{b7} %{value}", value = "");
+    let label_el = match label.strip_prefix(&*prefix).filter(|_| shared_prefix) {
         Some(rest) => div()
             .flex()
             .child(div().text_color(rgb(theme.muted)).child(prefix))

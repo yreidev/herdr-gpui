@@ -15,6 +15,7 @@ use crate::{
     search_input::SearchInput,
 };
 use gpui::{prelude::*, *};
+use rust_i18n::t;
 
 /// Where the key for a new device comes from.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -83,9 +84,19 @@ impl RailwayCard {
 fn location_note(directory: &crate::railway::KeyDirectory, name: &str) -> String {
     let folder = directory.path.display();
     if directory.user {
-        format!("Creates {folder}/{name} and {name}.pub.")
+        t!(
+            "Creates %{folder}/%{name} and %{name}.pub.",
+            folder = folder,
+            name = name
+        )
+        .into_owned()
     } else {
-        format!("No ~/.ssh folder, so this creates {folder}/{name} and {name}.pub.")
+        t!(
+            "No ~/.ssh folder, so this creates %{folder}/%{name} and %{name}.pub.",
+            folder = folder,
+            name = name
+        )
+        .into_owned()
     }
 }
 
@@ -173,7 +184,7 @@ impl SettingsWindow {
                         card.path.update(cx, |input, cx| {
                             input.set_text_selected(&path.to_string_lossy(), cx)
                         });
-                        Some(format!("Created {}.", path.display()))
+                        Some(t!("Created %{path}.", path = path.display()).into_owned())
                     }
                     Err(error) => Some(error.to_string()),
                 };
@@ -205,7 +216,7 @@ impl SettingsWindow {
             return;
         };
         if card.changing || setting_up {
-            card.message = Some("Wait for the current Railway action to finish.".into());
+            card.message = Some(t!("Wait for the current Railway action to finish.").into());
             cx.notify();
             return;
         }
@@ -244,7 +255,7 @@ impl SettingsWindow {
             files: true,
             directories: false,
             multiple: false,
-            prompt: Some("Choose SSH private key".into()),
+            prompt: Some(t!("Choose SSH private key").into()),
         });
         cx.spawn(async move |this, cx| {
             let Ok(Ok(Some(paths))) = paths.await else {
@@ -273,13 +284,13 @@ impl SettingsWindow {
             return;
         };
         if card.changing || setting_up {
-            card.message = Some("Wait for the current Railway action to finish.".into());
+            card.message = Some(t!("Wait for the current Railway action to finish.").into());
             cx.notify();
             return;
         }
         let text = card.path.read(cx).text().trim().to_owned();
         if card.source != KeySource::Existing || text.is_empty() {
-            card.message = Some("Generate a key, or enter the path of an existing one.".into());
+            card.message = Some(t!("Generate a key, or enter the path of an existing one.").into());
             cx.notify();
             return;
         }
@@ -302,9 +313,13 @@ impl SettingsWindow {
         });
         if let Some(card) = &mut self.railway_card {
             card.message = Some(match started {
-                Ok(Ok(())) => format!("Connecting {name}. The device picker shows its progress."),
+                Ok(Ok(())) => t!(
+                    "Connecting %{name}. The device picker shows its progress.",
+                    name = name
+                )
+                .into_owned(),
                 Ok(Err(error)) => error.to_string(),
-                Err(_) => "Open a main Herdr window to set up a VM.".into(),
+                Err(_) => t!("Open a main Herdr window to set up a VM.").into(),
             });
         }
         cx.notify();
@@ -318,7 +333,7 @@ impl SettingsWindow {
         on_click: impl Fn(&mut Self, &mut Context<Self>) + 'static,
         cx: &mut Context<Self>,
     ) -> Stateful<Div> {
-        self.cloud_button(id, label, enabled)
+        self.cloud_button(id, t!(label), enabled)
             .debug_selector(move || id.to_owned())
             .when(enabled, |button| {
                 button.on_click(cx.listener(move |this, _, _, cx| on_click(this, cx)))
@@ -335,9 +350,9 @@ impl SettingsWindow {
         let mut about = self
             .control_card("Railway")
             .debug_selector(|| "cloud-railway-card".into())
-            .child(
-                self.control_note("Temporary VM from railway.new, created with the SSH key below."),
-            );
+            .child(self.control_note(t!(
+                "Temporary VM from railway.new, created with the SSH key below."
+            )));
         if let Some(reason) = crate::cloud::unavailable() {
             about = about.child(self.control_note(reason));
         }
@@ -373,7 +388,7 @@ impl SettingsWindow {
                 let note = match overview {
                     _ if !valid => crate::railway::NAME_RULE.to_owned(),
                     Some(overview) => location_note(&overview.new_key_directory, &name),
-                    None => "Checking where the key goes…".to_owned(),
+                    None => t!("Checking where the key goes…").into_owned(),
                 };
                 key.child(self.cloud_field("Key name", card.name.clone().into()))
                     .child(self.control_note(note))
@@ -388,7 +403,7 @@ impl SettingsWindow {
             KeySource::Existing => key
                 .child(self.cloud_field("Private key path", card.path.clone().into()))
                 .child(self.control_note(
-                    "The file is never changed or deleted. A passphrase-protected key needs its .pub file beside it and a loaded SSH agent.",
+                    t!("The file is never changed or deleted. A passphrase-protected key needs its .pub file beside it and a loaded SSH agent."),
                 ))
                 .child(self.railway_button(
                     "cloud-railway-browse",
@@ -402,7 +417,7 @@ impl SettingsWindow {
             .child(
                 self.control_switch(
                     "cloud-railway-install",
-                    "Install Herdr on the VM when missing",
+                    t!("Install Herdr on the VM when missing"),
                     card.install,
                     ready,
                 )
@@ -440,19 +455,19 @@ impl SettingsWindow {
             .control_card("Railway devices")
             .debug_selector(|| "cloud-railway-devices".into());
         if card.devices().is_empty() {
-            devices = devices.child(self.control_note("None yet."));
+            devices = devices.child(self.control_note(t!("None yet.")));
         }
         for (index, device) in card.devices().iter().enumerate() {
-            let detail = format!(
-                "{} · {}{}",
-                device.saved.machine,
-                device.key_path().display(),
-                if device.key_present {
-                    ""
-                } else {
-                    " · key file missing"
-                }
-            );
+            let detail = if device.key_present {
+                format!("{} · {}", device.saved.machine, device.key_path().display())
+            } else {
+                t!(
+                    "%{machine} · %{path} · key file missing",
+                    machine = device.saved.machine,
+                    path = device.key_path().display()
+                )
+                .into_owned()
+            };
             devices = devices.child(self.cloud_device_row(
                 index,
                 &device.saved,
@@ -481,7 +496,7 @@ impl SettingsWindow {
         enabled: bool,
         cx: &mut Context<Self>,
     ) -> impl IntoElement {
-        self.control_choice(id, label, current == source, enabled)
+        self.control_choice(id, t!(label), current == source, enabled)
             .debug_selector(move || id.to_owned())
             .when(enabled, |choice| {
                 choice.on_click(cx.listener(move |this, _, _, cx| {
